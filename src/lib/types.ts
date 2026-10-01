@@ -121,8 +121,21 @@ export interface Chapter {
   workingVersionId?: string;
   canonVersionId?: string;
   summary: string; // 定稿后的章节摘要
+  /** 连续性台账：这一章正文实际写了什么（自动生成，随正文变化重算） */
+  digest?: ChapterDigest;
   words: number;
   updatedAt: number;
+}
+
+export interface ChapterDigest {
+  /** 生成时正文的指纹，正文变了就需要重算 */
+  hash: string;
+  summary: string;
+  /** 正文明确写出的原子事实：人物状态、位置、物品归属、数字、称呼、承诺…… */
+  facts: string[];
+  /** 与前文已确立事实矛盾的内容：不会进入台账（避免错误被当成正典），只用来提醒作者 */
+  conflicts?: { fact: string; prior: string }[];
+  at: number;
 }
 
 export type VersionKind = 'draft' | 'revision' | 'manual';
@@ -149,6 +162,10 @@ export interface CritiqueIssue {
   quote: string; // 引用原文
   problem: string;
   suggestion: string;
+  /** 引文核对结果：exact 精确定位 / fuzzy 近似定位 / global 整体性意见（无引文） */
+  verified?: 'exact' | 'fuzzy' | 'global';
+  /** 与之矛盾的已确立事实（连续性问题） */
+  fact?: string;
 }
 
 export interface Critique {
@@ -159,9 +176,11 @@ export interface Critique {
   createdAt: number;
   scores: Record<CritiqueDimension, number>; // 1–10
   verdict: string;
-  beats: { beat: string; status: BeatStatus; evidence: string }[];
+  beats: { beat: string; status: BeatStatus; evidence: string; note?: string }[];
   issues: CritiqueIssue[];
   strengths: string[];
+  /** 因为引文在正文里找不到而被程序丢弃的意见数（审稿幻觉） */
+  dropped?: number;
 }
 
 export const CRITIQUE_DIMENSIONS = ['节奏', '人物', '张力', '文笔', '连贯'] as const;

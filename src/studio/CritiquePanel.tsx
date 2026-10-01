@@ -3,7 +3,7 @@
  * 意见不会自动执行——作者勾选哪几条，修订就只处理哪几条。
  */
 import { motion } from 'motion/react';
-import { Check, CircleHelp, Quote, RefreshCw, Sparkles, Wand2, X } from 'lucide-react';
+import { Check, CircleHelp, Quote, RefreshCw, Sparkles, Wand2, X, ShieldCheck } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { Badge, Button, Empty, Textarea, Toggle } from '@/components/ui';
 import { CRITIQUE_DIMENSIONS, type BeatStatus, type Critique } from '@/lib/types';
@@ -129,7 +129,15 @@ function Report({ critique, stale, writing, canCritique, onCritique, onFlash, on
       <div>
         <Radar scores={critique.scores} />
         <p className="mt-2 font-serif text-[14px] leading-7 text-ink-2">{critique.verdict}</p>
-        <div className="mt-1 text-[11px] text-ink-3">{relativeTime(critique.createdAt)}</div>
+        <div className="mt-1 text-[11px] text-ink-3">
+          {relativeTime(critique.createdAt)} · AI 评分仅供参考
+        </div>
+        {!!critique.dropped && (
+          <p className="mt-2 flex items-start gap-1.5 rounded-lg bg-jade/10 px-2.5 py-1.5 text-[11.5px] leading-relaxed text-jade" role="note">
+            <ShieldCheck className="mt-0.5 size-3.5 shrink-0" />
+            已自动过滤 {critique.dropped} 条意见：它们引用的原文在正文里找不到，疑似模型编造。
+          </p>
+        )}
       </div>
 
       <section>
@@ -150,6 +158,7 @@ function Report({ critique, stale, writing, canCritique, onCritique, onFlash, on
                   </span>
                   <div className="min-w-0 flex-1">
                     <div className="text-[13px] leading-snug">{b.beat}</div>
+                    {b.note && <div className="mt-1 text-[11.5px] leading-relaxed text-gold">{b.note}</div>}
                     {b.evidence && (
                       <button onClick={() => onFlash(b.evidence)} className="mt-1 text-left text-[11.5px] leading-relaxed text-ink-3 transition hover:text-seal">
                         {b.status === 'done' ? `「${b.evidence.replace(/^[“"「]|[”"」]$/g, '')}」` : b.evidence}
@@ -181,6 +190,12 @@ function Report({ critique, stale, writing, canCritique, onCritique, onFlash, on
                     <div className="flex items-center gap-1.5">
                       <Badge tone={SEV[is.severity].tone}>{SEV[is.severity].label}</Badge>
                       <span className="text-[11.5px] text-ink-3">{is.type}</span>
+                      {is.verified && is.verified !== 'global' && (
+                        <span className="ml-auto flex items-center gap-1 text-[10.5px] text-jade" title={is.verified === 'exact' ? '引文已在正文中精确找到' : '引文与正文有细微出入，已按最接近的原文定位'}>
+                          <ShieldCheck className="size-3" />
+                          {is.verified === 'exact' ? '已核对原文' : '近似核对'}
+                        </span>
+                      )}
                     </div>
                     {is.quote && (
                       <button onClick={() => onFlash(is.quote)} className="mt-1.5 block w-full rounded-lg border-l-2 border-seal/50 bg-ink/[.03] px-2.5 py-1.5 text-left font-serif text-[12.5px] leading-relaxed text-ink-2 transition hover:bg-seal/[.06]" title="在正文中定位">
@@ -188,6 +203,7 @@ function Report({ critique, stale, writing, canCritique, onCritique, onFlash, on
                       </button>
                     )}
                     <p className="mt-1.5 text-[12.5px] leading-relaxed text-ink">{is.problem}</p>
+                    {is.fact && <p className="mt-1 rounded-md bg-ink/[.04] px-2 py-1 text-[11.5px] leading-relaxed text-ink-3">对照的前文事实：{is.fact}</p>}
                     <p className="mt-0.5 text-[12px] leading-relaxed text-ink-3">→ {is.suggestion}</p>
                   </div>
                 </div>

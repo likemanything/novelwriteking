@@ -10,7 +10,7 @@ import type { Chapter, Character, Project, Thread } from '@/lib/types';
 import { THREAD_KIND_LABEL } from '@/lib/types';
 import { estimateTokens } from '@/lib/util';
 
-export type LensKind = 'blueprint' | 'style' | 'tail' | 'character' | 'story' | 'recent' | 'thread' | 'world' | 'premise' | 'archive';
+export type LensKind = 'blueprint' | 'style' | 'tail' | 'character' | 'story' | 'recent' | 'thread' | 'world' | 'premise' | 'archive' | 'facts';
 
 export interface LensBlock {
   id: string;
@@ -34,6 +34,7 @@ export const LENS_KIND_META: Record<LensKind, { label: string; color: string }> 
   world: { label: '世界观', color: '#4b9bb5' },
   premise: { label: '故事梗概', color: '#a2643a' },
   archive: { label: '更早章节', color: '#9a9284' },
+  facts: { label: '已写明的事实', color: '#2f7f7a' },
 };
 
 function block(b: Omit<LensBlock, 'tokens'>): LensBlock {
@@ -166,7 +167,7 @@ export async function buildLens(projectId: string, chapterId: string): Promise<L
         label: `最近 ${recent.length} 章`,
         reason: '保持近期情节与情绪的连续',
         content: recent
-          .map((c) => `第${c.index}章《${c.title}》${c.summary ? `（定稿摘要）${c.summary}` : `（计划，未必已写成）${c.blueprint.goal}`}`)
+          .map((c) => `第${c.index}章《${c.title}》${c.summary ? `（定稿摘要）${c.summary}` : c.digest ? `（草稿摘要）${c.digest.summary}` : `（计划，未必已写成）${c.blueprint.goal}`}`)
           .join('\n'),
         priority: 65,
       }),
@@ -207,6 +208,21 @@ export async function buildLens(projectId: string, chapterId: string): Promise<L
 
   if (project.premise) {
     blocks.push(block({ id: 'premise', kind: 'premise', label: '故事梗概', reason: '全书方向，防止跑题', content: `${project.logline}\n${project.premise}`, priority: 45 }));
+  }
+
+  // 连续性台账：最近几章正文里明确写出的事实（含尚未定稿的草稿），写新章时对照它，避免前后矛盾
+  const withFacts = prev.filter((c) => c.digest?.facts.length).slice(-6);
+  if (withFacts.length) {
+    blocks.push(
+      block({
+        id: 'facts',
+        kind: 'facts',
+        label: `已写明的事实（第${withFacts[0].index}–${withFacts[withFacts.length - 1].index}章）`,
+        reason: '前文正文里明确写出的细节；与它们矛盾就是连续性错误',
+        content: withFacts.map((c) => `第${c.index}章：\n${c.digest!.facts.map((f) => `- ${f}`).join('\n')}`).join('\n'),
+        priority: 68,
+      }),
+    );
   }
 
   const archive = prev.slice(0, -3).filter((c) => c.summary);
@@ -251,7 +267,7 @@ export function planLens(blocks: LensBlock[], budget: number, excluded: Set<stri
   return { included, dropped, used };
 }
 
-const SECTION_ORDER: LensKind[] = ['premise', 'style', 'story', 'archive', 'recent', 'character', 'world', 'thread', 'tail', 'blueprint'];
+const SECTION_ORDER: LensKind[] = ['premise', 'style', 'story', 'archive', 'recent', 'facts', 'character', 'world', 'thread', 'tail', 'blueprint'];
 
 /** 渲染为提示词：从宏观到微观，蓝图放在最后，离生成位置最近。 */
 export function renderLens(included: LensBlock[]): string {

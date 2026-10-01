@@ -9,10 +9,11 @@ import {
   finalizeChapter,
   proposeFromExtraction,
 } from '@/lib/repo';
-import type { BeatStatus, Chapter, Critique, CritiqueIssue, Project, Version } from '@/lib/types';
+import type { BeatStatus, Chapter, ChapterDigest, Critique, CritiqueIssue, Project, Version } from '@/lib/types';
 import { CRITIQUE_DIMENSIONS, THREAD_KIND_LABEL } from '@/lib/types';
 import { clamp, cleanProse, extractJson, isAbort, parsePartialArray, uid } from '@/lib/util';
 import { patchBatchItem, useBatch } from '@/store/batch';
+import { toast } from '@/store/ui';
 import { abortJob, runJob, type JobContext } from '@/store/jobs';
 import { useSettings, type Stage } from '@/store/settings';
 import { profileFor } from '@/cloud/models';
@@ -22,6 +23,8 @@ import { AIError, streamChat, type ChatMessage } from './client';
 import { BUDGET_MSG } from './providers';
 import * as D from './demo';
 import { lintProse } from './lint';
+import { nameDrift, verifyCritique } from './verify';
+import { capsNow } from '@/cloud/session';
 import { blueprintText, buildLens, characterCard, planLens, renderLens } from './lens';
 import * as P from './prompts';
 import type { CritiqueResult, ExtractionResult, GenesisResult, MuseAction, OutlineChapter, StyleAnalysis } from './types';
@@ -116,6 +119,82 @@ async function loadChapter(chapterId: string) {
 async function workingText(chapter: Chapter): Promise<string> {
   if (!chapter.workingVersionId) return '';
   return (await db.versions.get(chapter.workingVersionId))?.content ?? '';
+}
+
+// ─────────────────────────── 连续性台账 ───────────────────────────
+
+/** 简单、稳定的文本指纹（只用来判断正文有没有变） */
+function fingerprint(text: string): string {
+  let h = 5381;
+  for (let i = 0; i < text.length; i++) h = ((h << 5) + h + text.charCodeAt(i)) | 0;
+  return `${text.length}:${(h >>> 0).toString(36)}`;
+}
+
+/** 无法写回数据库时（例如作者没有权限改已定稿的章节）的内存缓存 */
+const digestCache = new Map<string, ChapterDigest>();
+
+/**
+ * 保证某章有一份与当前正文一致的台账（摘要 + 原子事实）。
+ * 台账是前后章连续性的基础：写下一章、审稿时都对照它，而不是只靠最后 700 字。
+ */
+async function ensureDigest(project: Project, chapter: Chapter, names: string[], priorFacts: string, signal?: AbortSignal): Promise<ChapterDigest | null> {
+  const text = await workingText(chapter);
+  if (text.trim().length < 200) return null;
+  const hash = fingerprint(text);
+  if (chapter.digest?.hash === hash) return chapter.digest;
+  const cached = digestCache.get(`${chapter.id}:${hash}`);
+  if (cached) return cached;
+  if (profileFor('plan').provider === 'demo') return null;
+  try {
+    const raw = await streamChat({
+      profile: profileFor('plan'),
+      stage: 'plan',
+      projectId: project.id,
+      ...(() => {
+        const pr = P.digestPrompt(chapter, text, names, priorFacts);
+        return { system: pr.system, messages: [{ role: 'user' as const, content: pr.user }] };
+      })(),
+      demo: () => '{}',
+      signal,
+      temperature: 0.2,
+      maxTokens: 8000,
+    });
+    const j = parse<{ summary?: string; facts?: unknown[]; contradictions?: { fact?: unknown; prior?: unknown }[] }>(raw, true);
+    const conflicts = arr<{ fact?: unknown; prior?: unknown }>(j.contradictions)
+      .map((c) => ({ fact: str(c.fact), prior: str(c.prior) }))
+      .filter((c) => c.fact && c.prior)
+      .slice(0, 6);
+    const digest: ChapterDigest = { hash, summary: str(j.summary), facts: arr<unknown>(j.facts).map((f) => str(f)).filter(Boolean).slice(0, 16), ...(conflicts.length ? { conflicts } : {}), at: Date.now() };
+    if (!digest.summary && !digest.facts.length) return null;
+    digestCache.set(`${chapter.id}:${hash}`, digest);
+    // 已定稿的章节只有编辑能改；没有权限时只缓存在内存里，不去触发被服务端拒绝的写入
+    if (chapter.status !== 'final' || capsNow(project.id).finalize) await db.chapters.update(chapter.id, { digest });
+    chapter.digest = digest;
+    return digest;
+  } catch (error) {
+    if (isAbort(error)) throw error;
+    return null; // 台账是增强项：失败了不影响写作本身
+  }
+}
+
+/** 为某章之前的最近几章补齐台账（按顺序，最多 6 章）。 */
+async function ensureDigestsBefore(projectId: string, index: number, ctx?: { signal?: AbortSignal }) {
+  const [project, chapters, characters] = await Promise.all([
+    loadProject(projectId),
+    db.chapters.where('projectId').equals(projectId).sortBy('index'),
+    db.characters.where('projectId').equals(projectId).toArray(),
+  ]);
+  const names = characters.map((c) => c.name);
+  const prior: string[] = [];
+  for (const ch of chapters.filter((c) => c.index < index).slice(-6)) {
+    const had = ch.digest?.hash;
+    const d = await ensureDigest(project, ch, names, prior.join('\n'), ctx?.signal);
+    if (d) prior.push(`第${ch.index}章：${d.facts.join('；')}`);
+    // 刚刚发现这一章和前文矛盾：提醒作者，并且这些内容没有进入台账
+    if (d?.conflicts?.length && d.hash !== had) {
+      toast(`第${ch.index}章与前文有 ${d.conflicts.length} 处矛盾`, { tone: 'error', detail: `「${d.conflicts[0].fact}」与「${d.conflicts[0].prior}」冲突。矛盾的内容没有写入连续性台账；建议审稿查看。`, duration: 9000 });
+    }
+  }
 }
 
 async function threadsText(projectId: string) {
@@ -287,6 +366,8 @@ export function draftChapter(projectId: string, chapterId: string, excluded: Set
     lock: { projectId, chapterId },
     run: async (ctx) => {
       const [project, chapter] = await Promise.all([loadProject(projectId), loadChapter(chapterId)]);
+      // 前面几章（含没定稿的草稿）实际写了什么，先整理成台账，再装配资料
+      await ensureDigestsBefore(projectId, chapter.index, ctx);
       const { text: lensText } = await assembleLens(projectId, chapterId, excluded);
       const characters = await db.characters.where('projectId').equals(projectId).sortBy('order');
       const prev = await db.chapters.where('[projectId+index]').equals([projectId, chapter.index - 1]).first();
@@ -357,8 +438,63 @@ export function critiqueChapter(projectId: string, chapterId: string) {
         db.characters.where('projectId').equals(projectId).toArray(),
         db.threads.where('projectId').equals(projectId).toArray(),
       ]);
-      const raw = await call('review', projectId, P.critiquePrompt(project, chapter, blueprintText(chapter, characters, threads), text, lintSummaryText(text)), () => D.demoCritique({ text, chapter }), ctx, { temperature: 0.3, maxTokens: 10000, json: true });
-      const r = parse<Partial<CritiqueResult>>(raw, true);
+      // 对照前文：先补齐前几章的台账，把已确立的事实交给审稿
+      await ensureDigestsBefore(projectId, chapter.index, ctx);
+      const prevChapters = (await db.chapters.where('projectId').equals(projectId).sortBy('index')).filter((c) => c.index < chapter.index).slice(-6);
+      const factsText = [
+        ...characters.filter((c) => c.state.location || c.state.condition || c.state.knowledge).map((c) => `【${c.name}】${[c.state.location && `位置：${c.state.location}`, c.state.condition && `状态：${c.state.condition}`, c.state.knowledge && `已知：${c.state.knowledge}`].filter(Boolean).join('；')}`),
+        ...prevChapters.filter((c) => c.digest?.facts.length).map((c) => `第${c.index}章：\n${c.digest!.facts.map((f) => `- ${f}`).join('\n')}`),
+      ].join('\n');
+      // 审稿与「本章台账（含与前文的矛盾检查）」并行进行，不增加等待时间
+      const priorFacts = prevChapters.filter((c) => c.digest?.facts.length).map((c) => `第${c.index}章：${c.digest!.facts.join('；')}`).join('\n');
+      const [raw, curDigest] = await Promise.all([
+        call('review', projectId, P.critiquePrompt(project, chapter, blueprintText(chapter, characters, threads), text, lintSummaryText(text), factsText), () => D.demoCritique({ text, chapter }), ctx, { temperature: 0.3, maxTokens: 10000, json: true }),
+        ensureDigest(project, chapter, characters.map((c) => c.name), priorFacts, ctx.signal),
+      ]);
+      const r = parse<Partial<CritiqueResult> & { conflicts?: any[] }>(raw, true);
+      const world = await db.world.where('projectId').equals(projectId).toArray();
+      const rawIssues = [
+        ...arr<any>(r.issues).map((i) => ({
+          id: uid('is_'),
+          severity: SEVERITY[str(i.severity).toLowerCase()] ?? 'medium',
+          type: str(i.type, '其他'),
+          quote: str(i.quote),
+          problem: str(i.problem),
+          suggestion: str(i.suggestion),
+        })),
+        // 连续性冲突：必须同时给出正文原句和被违背的事实；原句核对不上的会被一并丢弃
+        ...arr<any>(r.conflicts).filter((c) => str(c.quote) && str(c.fact)).map((c) => ({
+          id: uid('is_'),
+          severity: 'high' as CritiqueIssue['severity'],
+          type: '连贯',
+          quote: str(c.quote),
+          problem: str(c.problem) || '与前文已确立的事实矛盾',
+          suggestion: str(c.suggestion),
+          fact: str(c.fact),
+        })),
+      ];
+      const checked = verifyCritique(text, rawIssues, arr<any>(r.beats).map((b) => ({ beat: str(b.beat), status: (BEAT_STATUS[str(b.status).toLowerCase()] ?? 'uncertain') as BeatStatus, evidence: str(b.evidence) })));
+      // 程序自己能查出来的：人名写串
+      const drift = nameDrift(text, characters.map((c) => c.name), [...world.map((w) => w.name), ...prevChapters.map((c) => c.title)]);
+      const driftIssues = drift.map((d) => ({
+        id: uid('is_'),
+        severity: 'medium' as CritiqueIssue['severity'],
+        type: '连贯',
+        quote: d.found,
+        problem: `「${d.found}」与设定人物「${d.expected}」只差一个字，出现了 ${d.count} 次，可能是把名字写串了。`,
+        suggestion: `核对是不是同一个人；如果是，统一为「${d.expected}」。`,
+        verified: 'exact' as const,
+      }));
+      const digestIssues = (curDigest?.conflicts ?? []).map((c) => ({
+        id: uid('is_'),
+        severity: 'high' as CritiqueIssue['severity'],
+        type: '连贯',
+        quote: '',
+        problem: `台账对照发现：本章写到「${c.fact}」`,
+        suggestion: '核对是前文还是本章写错了，统一后重新审稿。',
+        fact: c.prior,
+        verified: 'global' as const,
+      }));
       const critique: Critique = {
         id: uid('cr_'),
         projectId,
@@ -367,16 +503,10 @@ export function critiqueChapter(projectId: string, chapterId: string) {
         createdAt: Date.now(),
         scores: Object.fromEntries(CRITIQUE_DIMENSIONS.map((d) => [d, clamp(Number(r.scores?.[d]) || 6, 1, 10)])) as Critique['scores'],
         verdict: str(r.verdict),
-        beats: arr<any>(r.beats).map((b) => ({ beat: str(b.beat), status: BEAT_STATUS[str(b.status).toLowerCase()] ?? 'uncertain', evidence: str(b.evidence) })),
-        issues: arr<any>(r.issues).map((i) => ({
-          id: uid('is_'),
-          severity: SEVERITY[str(i.severity).toLowerCase()] ?? 'medium',
-          type: str(i.type, '其他'),
-          quote: str(i.quote),
-          problem: str(i.problem),
-          suggestion: str(i.suggestion),
-        })),
+        beats: checked.beats,
+        issues: [...checked.issues, ...driftIssues, ...digestIssues],
         strengths: arr<string>(r.strengths).map((s) => str(s)),
+        dropped: checked.dropped,
       };
       await db.critiques.add(critique);
       const fresh = await loadChapter(chapterId);

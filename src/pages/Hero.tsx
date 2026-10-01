@@ -2,7 +2,7 @@
 import { motion } from 'motion/react';
 import { ArrowRight, Dices, Eye, Layers, Stamp } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react';
-import { composeMany, fetchInspiration, prefetchInspirations } from '@/ai/inspiration';
+import { composeMany, fetchInspiration, getLevel, LEVELS, prefetchInspirations, setLevel, type WildLevel } from '@/ai/inspiration';
 import { useStageProfile } from '@/cloud/models';
 import { ThreadField } from '@/components/ThreadField';
 import { WritingScene } from '@/components/WritingScene';
@@ -97,13 +97,14 @@ function SeedBox({ onEnergy, onSubmit }: { onEnergy: () => void; onSubmit: (seed
   };
 
   const [rolling, setRolling] = useState(false);
+  const [level, setLevelState] = useState<WildLevel>(() => getLevel());
   const ctrl = useRef<AbortController | null>(null);
   useEffect(() => () => ctrl.current?.abort(), []);
   // 有模型时，提前在后台备好一批灵感，点「随机灵感」就能立刻出
   const plan = useStageProfile('plan');
   useEffect(() => {
-    if (plan.provider === 'cloud') void prefetchInspirations();
-  }, [plan.provider]);
+    if (plan.provider === 'cloud') void prefetchInspirations(level);
+  }, [plan.provider, level]);
 
   /** 随机灵感：有模型时由模型现写（边写边显示），没有时本地组合。 */
   const dice = async () => {
@@ -114,7 +115,7 @@ function SeedBox({ onEnergy, onSubmit }: { onEnergy: () => void; onSubmit: (seed
     setRolling(true);
     onEnergy();
     try {
-      const r = await fetchInspiration({ signal: c.signal });
+      const r = await fetchInspiration({ signal: c.signal, level });
       if (c.signal.aborted) return;
       if (r.fellBack) toast('模型暂时没有响应，这条灵感来自本地组合', { tone: 'info' });
       if (r.source === 'local') {
@@ -190,9 +191,29 @@ function SeedBox({ onEnergy, onSubmit }: { onEnergy: () => void; onSubmit: (seed
           )}
         </div>
         <div className="flex items-center justify-between gap-2 px-2 pb-1">
-          <Button type="button" variant="ghost" size="sm" icon={<Dices className="size-4" />} onClick={dice} loading={rolling}>
-            {rolling ? '正在想……' : '随机灵感'}
-          </Button>
+          <div className="flex items-center gap-1">
+            <Button type="button" variant="ghost" size="sm" icon={<Dices className="size-4" />} onClick={dice} loading={rolling}>
+              {rolling ? '正在想……' : '随机灵感'}
+            </Button>
+            <div className="hidden items-center rounded-full border border-line p-0.5 sm:flex" role="radiogroup" aria-label="脑洞浓度">
+              {LEVELS.map((l) => (
+                <button
+                  key={l.value}
+                  type="button"
+                  role="radio"
+                  aria-checked={level === l.value}
+                  title={l.hint}
+                  onClick={() => {
+                    setLevel(l.value);
+                    setLevelState(l.value);
+                  }}
+                  className={`rounded-full px-2.5 py-0.5 text-[11.5px] transition ${level === l.value ? 'bg-seal/10 text-seal' : 'text-ink-3 hover:text-ink-2'}`}
+                >
+                  {l.label}
+                </button>
+              ))}
+            </div>
+          </div>
           <div className="flex items-center gap-3">
             <span className="hidden items-center gap-1 text-[11px] text-ink-3 sm:flex">
               <Kbd>⌘</Kbd>

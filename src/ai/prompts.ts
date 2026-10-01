@@ -127,14 +127,15 @@ ${lensText}
   return { system: WRITER_SYSTEM, user };
 }
 
-export function critiquePrompt(project: Project, chapter: Chapter, blueprint: string, text: string, lintSummary = '') {
-  const system = `你是一位严格但建设性的小说编辑。你的审稿以原文证据为依据：判断情节点是否“真实发生”，而不是只被提及、准备或承诺。${JSON_RULE}`;
+export function critiquePrompt(project: Project, chapter: Chapter, blueprint: string, text: string, lintSummary = '', factsText = '') {
+  const system = `你是一位严格但建设性的小说编辑。你的审稿以原文证据为依据：判断情节点是否“真实发生”，而不是只被提及、准备或承诺。
+你的每一条意见、每一次判断都会被程序拿去和正文逐字核对：引文对不上的意见会被直接丢弃。所以只引用你确实在正文里看到的文字；没有把握就不要列。${JSON_RULE}`;
   const user = `# 作品文风
 ${styleText(project) || '（未设定）'}
 
 # 本章细纲
 ${blueprint}
-
+${factsText ? `\n# 前文已确立的事实（正典；本章如果与它们矛盾，就是连贯性问题）\n${factsText}\n` : ''}
 # 待审正文
 ${text}
 ${lintSummary ? `\n# 机械体检（程序统计，仅供参考；是否构成问题由你判断）\n${lintSummary}\n` : ''}
@@ -143,11 +144,37 @@ ${lintSummary ? `\n# 机械体检（程序统计，仅供参考；是否构成�
 {
   "scores": { "节奏": 1-10, "人物": 1-10, "张力": 1-10, "文笔": 1-10, "连贯": 1-10 },
   "verdict": "两三句总评",
-  "beats": [ { "beat": "细纲中的情节点原文", "status": "done/missing/uncertain", "evidence": "引用能证明的原文片段；缺失时说明缺了什么" } ],
-  "issues": [ { "severity": "high/medium/low", "type": "节奏/人物/张力/文笔/连贯/设定", "quote": "有问题的原文，逐字引用，不超过40字", "problem": "问题是什么", "suggestion": "具体怎么改" } ],
+  "beats": [ { "beat": "细纲中的情节点原文", "status": "done/missing/uncertain", "evidence": "status 为 done 时，必须是正文里逐字存在的一句话；missing 时说明缺了什么" } ],
+  "issues": [ { "severity": "high/medium/low", "type": "节奏/人物/张力/文笔/设定", "quote": "有问题的原文，逐字引用，不超过40字；如果是整体性问题无法引用，留空字符串", "problem": "问题是什么", "suggestion": "具体怎么改" } ],
+  "conflicts": [ { "quote": "本章正文里与已确立事实矛盾的那句原文，逐字引用", "fact": "被违背的已确立事实（原样抄录）", "problem": "矛盾在哪里", "suggestion": "怎么改" } ],
   "strengths": ["值得保留的 2-3 个亮点"]
 }
-要求：issues 3-6 条，按严重程度排序；quote 必须能在正文中逐字找到。`;
+要求：
+- issues 3-6 条，按严重程度排序；quote 必须能在正文中逐字找到。
+- conflicts 只列「确实矛盾」的：必须同时能指出正文里的原句和被违背的那条事实。没有就给空数组，不要为了凑数而编造，也不要把「细节更丰富」「表述不同」当成矛盾。
+- 评分标准：5 = 有明显缺陷；6 = 合格的初稿；7 = 完成度不错；8 = 接近可发表；9–10 仅用于出版水准。大多数初稿应落在 5–7，不要普遍给高分。`;
+  return { system, user };
+}
+
+export function digestPrompt(chapter: Chapter, text: string, names: string[], priorFacts = '') {
+  const system = `你是小说的连续性记录员。你的任务是把一章正文压缩成「后文写作时必须记住的东西」，并把它和前文已确立的事实对照，找出矛盾。只记录正文里明确写出的内容，不推测、不补完、不评价。${JSON_RULE}`;
+  const user = `已知人物：${names.join('、') || '（无）'}
+${priorFacts ? `\n# 前文已确立的事实（正典）\n${priorFacts}\n` : ''}
+# 第${chapter.index}章《${chapter.title}》正文
+${text}
+
+---
+输出 JSON：
+{
+  "summary": "100–150 字，只写这一章实际发生了什么（谁做了什么、结果如何）",
+  "facts": ["原子事实，每条一句话，8–14 条"],
+  "contradictions": [ { "fact": "本章写出的、与前文矛盾的事实", "prior": "被它违背的前文事实（原样抄录）" } ]
+}
+facts 的要求：
+- 每条只含一个可以被后文引用、也可能被后文写错的事实：人物的位置与状态、物品在谁手里、具体数字（年龄、日期、数量）、称呼与关系、谁知道什么、做出的承诺与留下的疑点；
+- 必须是正文明确写出的，带上具体名字，不要用「他」「那个人」；
+- 只写故事里发生的事实，不要写对正文的评价或前后对比；
+- 与前文矛盾的事实不要放进 facts，只放进 contradictions；没有矛盾就给空数组，不要为了凑数而编造。`;
   return { system, user };
 }
 

@@ -45,3 +45,49 @@ test('本地灵感兜底：每次不同，且是完整的句子', () => {
   assert.ok(many.every((s) => s.length >= 12 && /[。]$/.test(s)));
   assert.notEqual(composeInspiration([many[0]]), many[0]);
 });
+
+import { beatCoverage, locateQuote, nameDrift, verifyCritique } from '../src/ai/verify.ts';
+
+const SAMPLE = '沈砚把证物袋翻了个面，让顶灯从筒口打进去。纸壳透光，药粉的阴影密实均匀。\n\n手机在实验服口袋里震。她摘了手套接起来。“你爸不行了，回来一趟。”母亲的声音很平。';
+
+test('引文核验：精确、忽略标点、近似都能定位，编造的找不到', () => {
+  assert.equal(locateQuote(SAMPLE, '药粉的阴影密实均匀')?.level, 'exact');
+  const loose = locateQuote(SAMPLE, '“你爸不行了 回来一趟”');
+  assert.equal(loose?.level, 'exact', '忽略标点后可定位');
+  assert.equal(SAMPLE.slice(loose!.from, loose!.to).includes('回来一趟'), true);
+  assert.equal(locateQuote(SAMPLE, '她摘了手套接起电话')?.level, 'fuzzy', '模型改了一两个字也能近似定位');
+  assert.equal(locateQuote(SAMPLE, '父亲在院子里点燃了二十八响烟花'), null, '编造的引文找不到');
+  assert.equal(locateQuote(SAMPLE, '好'), null, '太短不下结论');
+});
+
+test('审稿核验：丢弃编造引文的意见；没证据的「已完成」降级；明明写了的「未完成」降级', () => {
+  const issues = [
+    { quote: '药粉的阴影密实均匀', problem: 'a' },
+    { quote: '父亲在院子里点燃了二十八响烟花', problem: 'b（编造）' },
+    { quote: '', problem: 'c（整体意见）' },
+  ];
+  const beats = [
+    { beat: '她接到母亲的电话', status: 'done' as const, evidence: '“你爸不行了，回来一趟。”' },
+    { beat: '父亲点燃烟花', status: 'done' as const, evidence: '父亲在院子里点燃了烟花' },
+    { beat: '沈砚把证物袋翻了个面让顶灯从筒口打进去', status: 'missing' as const, evidence: '' },
+    { beat: '她在车站遇到顾衡并被警告别查旧案', status: 'missing' as const, evidence: '' },
+  ];
+  const r = verifyCritique(SAMPLE, issues, beats);
+  assert.equal(r.dropped, 1);
+  assert.deepEqual(r.issues.map((i) => i.problem), ['a', 'c（整体意见）']);
+  assert.equal(r.issues[0].verified, 'exact');
+  assert.equal(r.issues[1].verified, 'global');
+  assert.equal(r.beats[0].status, 'done');
+  assert.equal(r.beats[1].status, 'uncertain');
+  assert.match(r.beats[1].note!, /找不到/);
+  assert.equal(r.beats[2].status, 'uncertain');
+  assert.match(r.beats[2].note!, /误判/);
+  assert.equal(r.beats[3].status, 'missing');
+  assert.ok(beatCoverage(SAMPLE, beats[3].beat) < 0.3);
+});
+
+test('人名一致性：差一个字且反复出现的名字会被提示，设定里本来就有的不算', () => {
+  const text = '沈雾推开门。沈蘅没有回头。沈蘅把灯放下，沈雾看着她。林澈和林溯都在。林溯笑了。';
+  const drift = nameDrift(text, ['沈雾', '林澈', '林溯']);
+  assert.deepEqual(drift, [{ expected: '沈雾', found: '沈蘅', count: 2 }]);
+});
