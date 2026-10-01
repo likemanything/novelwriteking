@@ -162,7 +162,7 @@ export function CommandPalette() {
     <AnimatePresence>
       {open && (
         <div className="fixed inset-0 z-[90] flex items-start justify-center px-4 pt-[14vh]">
-          <motion.div className="absolute inset-0 bg-[#140f08]/30 backdrop-blur-[3px]" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setOpen(false)} />
+          <motion.div className="absolute inset-0 bg-[color:var(--scrim)] backdrop-blur-[6px]" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setOpen(false)} />
           <motion.div
             role="dialog"
             aria-label="命令面板"
@@ -170,7 +170,7 @@ export function CommandPalette() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -8, scale: 0.98 }}
             transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
-            className="relative w-full max-w-[600px] overflow-hidden rounded-2xl border border-line bg-paper-2 shadow-[var(--shadow-float)]"
+            className="gborder glass relative w-full max-w-[600px] overflow-hidden rounded-3xl bg-[color:var(--surface-1)]/92 shadow-[var(--elev-3)] after:opacity-100"
           >
             <div className="flex items-center gap-3 border-b border-line px-4">
               <Search className="size-4 text-ink-3" />
@@ -203,7 +203,11 @@ export function CommandPalette() {
                           onClick={() => run(c)}
                           className={cx('relative flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm transition-colors', i === active ? 'text-ink' : 'text-ink-2')}
                         >
-                          {i === active && <motion.span layoutId="palette-active" className="absolute inset-0 rounded-xl bg-ink/[.06]" transition={{ type: 'spring', stiffness: 600, damping: 44 }} />}
+                          {i === active && (
+                            <motion.span layoutId="palette-active" className="absolute inset-0 rounded-xl border border-line bg-[color:var(--surface-2)] shadow-[var(--elev-1)]" transition={{ type: 'spring', stiffness: 600, damping: 44 }}>
+                              <span className="absolute top-1/2 left-0 h-4 w-[3px] -translate-y-1/2 rounded-full bg-seal shadow-[0_0_10px_var(--seal)]" />
+                            </motion.span>
+                          )}
                           <span className="relative text-ink-3 [&>svg]:size-4">{c.icon}</span>
                           <span className="relative flex-1 truncate">{c.label}</span>
                           {c.hint && <span className="relative text-xs text-ink-3">{c.hint}</span>}

@@ -24,7 +24,7 @@ export function Toaster() {
             animate={{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
             exit={{ opacity: 0, y: 10, scale: 0.96, transition: { duration: 0.2 } }}
             transition={{ type: 'spring', stiffness: 420, damping: 32 }}
-            className="pointer-events-auto flex max-w-[min(520px,100%)] items-start gap-3 rounded-2xl border border-line bg-paper-2/95 py-3 pr-2 pl-4 text-sm shadow-[var(--shadow-float)] backdrop-blur"
+            className="glass pointer-events-auto flex max-w-[min(520px,100%)] items-start gap-3 rounded-2xl bg-[color:var(--surface-1)]/90 py-3 pr-2 pl-4 text-fs-base shadow-[var(--elev-3)]"
             role={t.tone === 'error' ? 'alert' : 'status'}
           >
             <span className="mt-0.5 shrink-0">{ICON[t.tone]}</span>

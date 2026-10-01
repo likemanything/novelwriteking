@@ -210,10 +210,18 @@ body:where(.dark *)::before {
   background: color-mix(in oklab, var(--seal) 22%, transparent);
 }
 
-:focus-visible {
-  outline: 2px solid color-mix(in oklab, var(--seal) 75%, transparent);
-  outline-offset: 2px;
-  box-shadow: var(--ring-glow);
+/* 全局焦点环放在 base 层：组件和工具类（如 outline-none、.field:focus）可以覆盖它，不会再出现多余的方框 */
+@layer base {
+  :focus-visible {
+    outline: 2px solid color-mix(in oklab, var(--seal) 75%, transparent);
+    outline-offset: 2px;
+    box-shadow: var(--ring-glow);
+  }
+  input:focus-visible,
+  textarea:focus-visible {
+    outline: none;
+    box-shadow: none;
+  }
 }
 
 * {
@@ -387,12 +395,17 @@ button:disabled {
 .manuscript .cm-scroller {
   font-family: inherit;
   line-height: 2.05;
-  padding: 3.5rem 0 45vh;
+  padding: 2rem 0.75rem 45vh;
 }
+/* 稿纸：正文落在一张会「亮」的纸上，四周是安静的墨色背景；写得越多，纸越长 */
 .manuscript .cm-content {
   max-width: 40em;
   margin: 0 auto;
-  padding: 0 2rem;
+  padding: 3rem clamp(1.25rem, 5vw, 3.25rem) 4rem;
+  border-radius: 20px;
+  background: color-mix(in oklab, var(--surface-1) 90%, transparent);
+  border: 1px solid var(--border-1);
+  box-shadow: var(--elev-2);
   caret-color: var(--seal);
   letter-spacing: 0.02em;
 }

@@ -228,9 +228,9 @@ export default function Overview() {
 
   return (
     <div className="h-full overflow-y-auto">
-      <div className="mx-auto max-w-6xl px-8 pt-10 pb-20">
+      <div className="mx-auto max-w-6xl px-5 pt-8 pb-20 sm:px-8 sm:pt-10">
         {/* 书头 */}
-        <section className="flex flex-col gap-10 md:flex-row md:items-end">
+        <section className="flex flex-col gap-8 md:flex-row md:items-end md:gap-10 [&>*]:min-w-0">
           <motion.div initial={{ opacity: 0, y: 20, rotate: -2 }} animate={{ opacity: 1, y: 0, rotate: 0 }} transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }} className="shrink-0">
             <Cover spec={project.cover} title={project.title} width={196} />
           </motion.div>
@@ -269,7 +269,7 @@ export default function Overview() {
         </section>
 
         {/* 数字 */}
-        <section className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <section className="mt-12 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 [&>*]:min-w-0">
           <Stat label="全书字数" icon={<PenLine />} sub={`目标约 ${formatNumber(project.targetWords * project.targetChapters)} 字`}>
             <Counter value={totalWords} />
           </Stat>
@@ -299,7 +299,7 @@ export default function Overview() {
         {!!steps.length && (
           <section className="mt-10">
             <h2 className="mb-4 text-fs-2xs tracking-[.3em] text-seal">下一步</h2>
-            <div className="grid gap-4 md:grid-cols-3">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-3 [&>*]:min-w-0">
               {steps.map((s, i) => (
                 <motion.button
                   key={s.title}
@@ -330,7 +330,7 @@ export default function Overview() {
           <ChapterScroll chapters={chapters} target={target} words={project.targetWords} onOpen={(c) => navigate(`${base}/write/${c.id}`)} />
         </section>
 
-        <section className="mt-6 grid gap-6 lg:grid-cols-[1fr_1.1fr]">
+        <section className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[1fr_1.1fr] [&>*]:min-w-0">
           <InkHeatmap projectId={project.id} />
           <div className="surface rounded-2xl p-6">
             <div className="mb-4 flex items-end justify-between">
