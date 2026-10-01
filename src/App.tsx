@@ -20,6 +20,7 @@ const Outline = lazy(() => import('@/pages/Outline'));
 const Studio = lazy(() => import('@/pages/Studio'));
 const Loom = lazy(() => import('@/pages/Loom'));
 const Inbox = lazy(() => import('@/pages/Inbox'));
+const Landing = lazy(() => import('@/pages/Landing'));
 const Drama = lazy(() => import('@/pages/Drama'));
 const Settings = lazy(() => import('@/pages/Settings'));
 const Team = lazy(() => import('@/pages/Team'));
@@ -81,6 +82,18 @@ function Gate({ children }: { children: ReactNode }) {
   return <>{children}</>;
 }
 
+/** 首页：未登录显示介绍页，登录后显示书架。 */
+function Home() {
+  const status = useSession((s) => s.status);
+  useEffect(() => ensureSession(), []);
+  if (status === 'anon') return <Landing />;
+  return (
+    <Gate>
+      <Library />
+    </Gate>
+  );
+}
+
 function ReadyOnly({ children }: { children: ReactNode }) {
   const ready = useSession((s) => s.status === 'ready');
   return ready ? <>{children}</> : null;
@@ -95,6 +108,7 @@ export function App() {
         <RoutedBoundary>
         <Suspense fallback={<PageLoader />}>
           <Routes>
+            <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />
             <Route path="/invite/:token" element={<Invite />} />
             <Route
@@ -102,7 +116,6 @@ export function App() {
               element={
                 <Gate>
                   <Routes>
-                    <Route path="/" element={<Library />} />
                     <Route path="/genesis" element={<Genesis />} />
                     <Route path="/settings" element={<Settings />} />
                     <Route path="/team" element={<Team />} />

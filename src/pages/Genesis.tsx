@@ -16,7 +16,7 @@ import { createProjectFromGenesis, makeCover } from '@/lib/repo';
 import { cx, isAbort, silk } from '@/lib/util';
 import { abortJob, useJob } from '@/store/jobs';
 import { toast, toastError } from '@/store/ui';
-import { INSPIRATIONS } from './Library';
+import { composeInspiration } from '@/ai/inspiration';
 
 const GENRES = ['悬疑', '奇幻', '仙侠', '科幻', '都市', '历史', '言情', '武侠'];
 const TONES = ['温暖', '冷峻', '幽默', '悲怆', '热血', '诡谲', '治愈', '史诗'];
@@ -55,6 +55,7 @@ export default function Genesis() {
   const navigate = useNavigate();
   const [params] = useSearchParams();
   const [stage, setStage] = useState<Stage>('config');
+  const placeholderIdea = useMemo(() => composeInspiration(), []);
   const [input, setInput] = useState<GenesisInput>({ seed: params.get('seed') ?? '', genre: '', chapters: 30, words: 3000, tone: '', notes: '' });
   const [tones, setTones] = useState<string[]>([]);
   const [result, setResult] = useState<GenesisResult | null>(null);
@@ -101,7 +102,7 @@ export default function Genesis() {
                 onChange={(e) => setInput({ ...input, seed: e.target.value })}
                 onKeyDown={(e) => e.key === 'Enter' && (e.metaKey || e.ctrlKey) && weave()}
                 rows={3}
-                placeholder={INSPIRATIONS[2]}
+                placeholder={placeholderIdea}
                 aria-label="灵感"
                 className="block w-full resize-none bg-transparent px-5 pt-4 pb-3 font-serif text-[21px] leading-relaxed text-ink outline-none placeholder:text-ink-3"
               />

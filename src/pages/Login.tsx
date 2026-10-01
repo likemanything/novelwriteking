@@ -5,9 +5,9 @@
 import { motion } from 'motion/react';
 import { ArrowRight, KeyRound, Smartphone } from 'lucide-react';
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
-import { useSearchParams } from 'react-router';
+import { Link, Navigate, useSearchParams } from 'react-router';
 import { api, ApiError } from '@/cloud/api';
-import { setLastOrg } from '@/cloud/session';
+import { ensureSession, setLastOrg, useSession } from '@/cloud/session';
 import { Seal } from '@/components/Seal';
 import { ThreadField } from '@/components/ThreadField';
 import { Button, Input } from '@/components/ui';
@@ -168,6 +168,11 @@ export function AuthShell({ title, subtitle, children }: { title: string; subtit
 export default function Login() {
   const [params] = useSearchParams();
   const next = params.get('next');
+  const status = useSession((s) => s.status);
+  useEffect(() => ensureSession(), []);
+  const target = next && next.startsWith('/') && !next.startsWith('//') ? next : '/';
+  // 已经登录的人不需要再看登录页
+  if (status === 'ready') return <Navigate to={target} replace />;
   return (
     <AuthShell title="登录墨织" subtitle="用手机号登录。新用户注册需要内测邀请码，或者通过团队的邀请链接加入。">
       <LoginForm
@@ -177,6 +182,9 @@ export default function Login() {
           window.location.assign(target);
         }}
       />
+      <Link to="/" className="mt-5 inline-block text-[12.5px] text-ink-3 underline-offset-2 hover:text-ink hover:underline">
+        ← 回到首页
+      </Link>
     </AuthShell>
   );
 }
