@@ -1,0 +1,49 @@
+# 一键部署：docker compose up -d --build
+# 需要同目录下的 .env.production（模板见 deploy/env.production.example）
+services:
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      INKLOOM_DB_PASSWORD: ${INKLOOM_DB_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./deploy/postgres-init.sh:/docker-entrypoint-initdb.d/10-inkloom.sh:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      retries: 10
+
+  app:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file: .env.production
+    environment:
+      DATABASE_URL: postgres://inkloom:${INKLOOM_DB_PASSWORD}@db:5432/inkloom
+      NODE_ENV: production
+      HOST: 0.0.0.0
+      TRUST_PROXY: "true"
+    volumes:
+      - media:/app/data/media
+
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    depends_on: [app]
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMAIN: ${DOMAIN}
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+
+volumes:
+  pgdata:
+  media:
+  caddy_data:
