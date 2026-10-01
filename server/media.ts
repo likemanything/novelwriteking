@@ -104,10 +104,12 @@ export async function generateMedia(
 }
 
 /** 删除一个或一批节点的资产（数据库记录与磁盘文件）。 */
-export async function deleteAssets(tx: Tx, where: { nodeId?: string; assetId?: string }) {
+export async function deleteAssets(tx: Tx, where: { nodeId?: string; assetId?: string; dramaId?: string }) {
   const rows = where.assetId
     ? await tx<{ id: string; file: string }[]>`delete from media_assets where id = ${where.assetId} returning id, file`
-    : await tx<{ id: string; file: string }[]>`delete from media_assets where node_id = ${where.nodeId ?? null} returning id, file`;
+    : where.dramaId
+      ? await tx<{ id: string; file: string }[]>`delete from media_assets where drama_id = ${where.dramaId} returning id, file`
+      : await tx<{ id: string; file: string }[]>`delete from media_assets where node_id = ${where.nodeId ?? null} returning id, file`;
   for (const r of rows) await unlink(join(config.storageDir, r.file)).catch(() => {});
 }
 

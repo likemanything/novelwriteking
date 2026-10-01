@@ -22,6 +22,7 @@ import {
   type DramaNodeType,
   type DramaPreset,
   type DramaProjectDTO,
+  type ImageOutput,
   type OutlineEpisode,
   type OutlineOutput,
   type ScriptOutput,
@@ -30,6 +31,7 @@ import {
 } from '@/shared/drama';
 import { atLeast } from '@/shared/permissions';
 import { runTextModel } from './ai.ts';
+import { deleteAssets, generateMedia } from './media.ts';
 import { sql, withTenant, type Tx } from './db/pool.ts';
 import { breakdownPrompt, outlinePrompt, scriptPrompt, storyboardPrompt } from './drama-prompts.ts';
 import { isUuid, readJson, requireOrg, roleInProject, type AppEnv, type OrgContext } from './http.ts';
@@ -269,17 +271,20 @@ interface State {
   nodes: NodeRow[];
   edges: { id: string; from_id: string; to_id: string }[];
   chapters: Chapter[];
+  /** 当前启用的图像服务（换了服务，图像节点就该重算） */
+  imageProvider: string | null;
 }
 
 async function loadState(tx: Tx, dramaId: string): Promise<State> {
   const [drama] = await tx<DramaRow[]>`select id, novel_id, preset, created_at from drama_projects where id = ${dramaId}`;
   if (!drama) throw notFound('找不到这张画布');
-  const [nodes, edges, chapters] = await Promise.all([
+  const [nodes, edges, chapters, ip] = await Promise.all([
     tx<NodeRow[]>`select * from drama_nodes where drama_id = ${dramaId} order by x, y`,
     tx<{ id: string; from_id: string; to_id: string }[]>`select id, from_id, to_id from drama_edges where drama_id = ${dramaId}`,
     loadChapterRows(tx, drama.novel_id),
+    tx<{ provider_id: string | null }[]>`select provider_id from media_assignments where kind = 'image'`,
   ]);
-  return { drama, preset: { ...DEFAULT_PRESET, ...drama.preset }, nodes, edges, chapters };
+  return { drama, preset: { ...DEFAULT_PRESET, ...drama.preset }, nodes, edges, chapters, imageProvider: ip[0]?.provider_id ?? null };
 }
 
 const find = (s: State, type: DramaNodeType) => s.nodes.find((n) => n.type === type);
@@ -312,9 +317,31 @@ function currentInputHash(s: State, node: NodeRow): string {
       const script = episodeNode(s, 'script', Number(node.params.episode));
       return sha({ p: [p.ratio, p.episodeSeconds, p.style], script: script?.output_hash, b: breakdown?.output_hash });
     }
+    case 'portrait':
+    case 'location': {
+      const item = assetSource(s, node);
+      return sha({ style: p.style, ratio: node.type === 'location' ? p.ratio : '', item, prompt: node.params.prompt ?? '', provider: s.imageProvider });
+    }
     default:
       return '';
   }
+}
+
+/** 图像节点对应的拆解条目（人物或场景） */
+function assetSource(s: State, node: NodeRow): { name: string; look: string } | null {
+  const b = find(s, 'breakdown')?.output as BreakdownOutput | undefined;
+  const key = String(node.params.key ?? '');
+  const list = node.type === 'portrait' ? b?.characters : b?.locations;
+  const it = arr<{ name: string; look: string }>(list).find((x) => x.name === key);
+  return it ? { name: it.name, look: it.look } : null;
+}
+
+function portraitPrompt(style: string, name: string, look: string): string {
+  return `${style ? `${style}。` : ''}角色定妆照：${name}，${look}。全身像，正面站立，表情自然，纯净浅色背景，光线均匀，细节清晰，不要文字。`;
+}
+
+function locationPrompt(style: string, name: string, look: string): string {
+  return `${style ? `${style}。` : ''}场景概念图：${name}，${look}。空镜，不出现人物，电影感构图，不要文字。`;
 }
 
 function isStale(s: State, n: NodeRow): boolean {
@@ -374,6 +401,30 @@ async function reconcileEpisodes(tx: Tx, orgId: string, dramaId: string, outline
     if (script) await tx`update drama_nodes set title = ${`第${ep.n}集 · 剧本`} where id = ${scriptId}`;
     await link(tx, orgId, dramaId, outlineNode.id, scriptId);
     await link(tx, orgId, dramaId, scriptId, boardId);
+  }
+}
+
+/** 拆解完成后，为每个人物与场景建一个图像节点（人物在左列、场景在右列，位于大纲下方）。 */
+async function reconcileAssets(tx: Tx, orgId: string, dramaId: string, b: BreakdownOutput) {
+  const s = await loadState(tx, dramaId);
+  const breakdownNode = find(s, 'breakdown')!;
+  const groups: { type: 'portrait' | 'location'; names: string[]; x: number; label: string }[] = [
+    { type: 'portrait', names: b.characters.map((c) => c.name), x: COL.breakdown, label: '定妆' },
+    { type: 'location', names: b.locations.map((l) => l.name), x: COL.outline, label: '场景' },
+  ];
+  for (const g of groups) {
+    const want = new Set(g.names);
+    for (const n of s.nodes.filter((x) => x.type === g.type)) {
+      if (!want.has(String(n.params.key))) {
+        await deleteAssets(tx, { nodeId: n.id });
+        await tx`delete from drama_nodes where id = ${n.id}`;
+      }
+    }
+    for (const [i, name] of g.names.entries()) {
+      const existing = s.nodes.find((x) => x.type === g.type && x.params.key === name);
+      const id = existing?.id ?? (await insertNode(tx, orgId, dramaId, g.type, `${name} · ${g.label}`, g.x, 300 + i * 300, { key: name }));
+      await link(tx, orgId, dramaId, breakdownNode.id, id);
+    }
   }
 }
 
@@ -493,6 +544,19 @@ async function execute(org: OrgContext, s: State, node: NodeRow, signal: AbortSi
       if (!out.shots.length) throw new HttpError(502, 'bad_output', '模型没有拆出镜头，请重试');
       return out;
     }
+    case 'portrait':
+    case 'location': {
+      const item = assetSource(s, node);
+      if (breakdown?.status !== 'done' || !item) throw new NeedUpstream('请先运行「故事拆解」');
+      const style = p.style;
+      const prompt = str(node.params.prompt, 2000) || (node.type === 'portrait' ? portraitPrompt(style, item.name, item.look) : locationPrompt(style, item.name, item.look));
+      const asset = await generateMedia(org, { kind: 'image', input: { prompt, ratio: node.type === 'portrait' ? '3:4' : p.ratio }, dramaId: s.drama.id, nodeId: node.id, projectId: novelId, signal });
+      // 新图生成成功后，才清理这个节点之前的旧图
+      await withTenant(org.orgId, async (tx) => {
+        for (const old of await tx<{ id: string }[]>`select id from media_assets where node_id = ${node.id} and id <> ${asset.id}`) await deleteAssets(tx, { assetId: old.id });
+      });
+      return { assetId: asset.id, prompt, mime: asset.mime } satisfies ImageOutput;
+    }
     default:
       throw badRequest('这个节点不需要运行');
   }
@@ -528,6 +592,7 @@ async function runNode(org: OrgContext, dramaId: string, nodeId: string, externa
       await tx`update drama_nodes set status = 'done', output = ${tx.json(output as any)}, output_hash = ${sha(output)}, input_hash = ${inputHash},
         error = null, approved = false, run_ms = ${Date.now() - started}, updated_at = now() where id = ${nodeId}`;
       if (node.type === 'outline') await reconcileEpisodes(tx, org.orgId, dramaId, output as OutlineOutput);
+      if (node.type === 'breakdown') await reconcileAssets(tx, org.orgId, dramaId, output as BreakdownOutput);
     });
     return 'done';
   } catch (error) {
@@ -571,6 +636,29 @@ async function runAll(org: OrgContext, dramaId: string, batch: { cancelled: bool
       }
     };
     await Promise.all(Array.from({ length: Math.min(BATCH_CONCURRENCY, eps.length) }, worker));
+  } finally {
+    clearInterval(timer);
+    batches.delete(dramaId);
+    notifyDrama(org.orgId, dramaId);
+  }
+}
+
+/** 批量生成角色定妆与场景图。图像要花钱，所以不包含在「一键运行」里，由作者单独放行。 */
+async function runMedia(org: OrgContext, dramaId: string, batch: { cancelled: boolean }) {
+  const reload = () => withTenant(org.orgId, (tx) => loadState(tx, dramaId));
+  const ctrl = new AbortController();
+  const timer = setInterval(() => batch.cancelled && ctrl.abort(), 500);
+  try {
+    const s0 = await reload();
+    const ids = s0.nodes.filter((n) => (n.type === 'portrait' || n.type === 'location') && needsRun(s0, n)).map((n) => n.id);
+    let next = 0;
+    const worker = async () => {
+      while (!batch.cancelled && next < ids.length) {
+        const id = ids[next++];
+        if ((await runNode(org, dramaId, id, ctrl.signal)) === 'failed' && ctrl.signal.aborted) return;
+      }
+    };
+    await Promise.all(Array.from({ length: Math.min(2, ids.length) }, worker));
   } finally {
     clearInterval(timer);
     batches.delete(dramaId);
@@ -723,6 +811,7 @@ dramaRoutes.delete('/:id', async (c) => {
   await dramaFor(org, id, 'editor');
   await withTenant(org.orgId, async (tx) => {
     for (const n of await tx<{ id: string }[]>`select id from drama_nodes where drama_id = ${id}`) running.get(n.id)?.abort();
+    await deleteAssets(tx, { dramaId: id });
     await tx`delete from drama_projects where id = ${id}`;
   });
   const b = batches.get(id);
@@ -739,6 +828,18 @@ dramaRoutes.post('/:id/run-all', async (c) => {
   const batch = { cancelled: false };
   batches.set(id, batch);
   void runAll(org, id, batch).catch((e) => console.error('[短剧] 批量运行出错', e));
+  return c.json({ started: true }, 202);
+});
+
+dramaRoutes.post('/:id/run-media', async (c) => {
+  const org = await requireOrg(c);
+  const id = c.req.param('id');
+  await dramaFor(org, id, 'author');
+  if (batches.has(id)) throw conflict('这张画布正在批量运行', 'busy');
+  limit(`drama:media:${org.user.id}`, 20, 3600_000, '运行太频繁，请稍后再试');
+  const batch = { cancelled: false };
+  batches.set(id, batch);
+  void runMedia(org, id, batch).catch((e) => console.error('[短剧] 批量生图出错', e));
   return c.json({ started: true }, 202);
 });
 
@@ -786,7 +887,7 @@ dramaRoutes.patch('/nodes/:nodeId', async (c) => {
   const org = await requireOrg(c);
   const nodeId = c.req.param('nodeId');
   const node = await nodeFor(org, nodeId, 'author');
-  const body = await readJson<{ output?: unknown; approved?: boolean }>(c);
+  const body = await readJson<{ output?: unknown; approved?: boolean; params?: { prompt?: string } }>(c);
   await withTenant(org.orgId, async (tx) => {
     const [row] = await tx<NodeRow[]>`select * from drama_nodes where id = ${nodeId} for update`;
     if (row.status === 'running') throw conflict('节点正在运行，请稍后再改', 'busy');
@@ -799,10 +900,15 @@ dramaRoutes.patch('/nodes/:nodeId', async (c) => {
         out = { episodes: arr<Row>((body.output as Row)?.episodes).map((e, i) => normEpisode(e, i + 1)).map((e, i) => ({ ...e, n: i + 1 })) } satisfies OutlineOutput;
       } else if (row.type === 'script') out = normScript(body.output, episode);
       else if (row.type === 'storyboard') out = normStoryboard(body.output, episode);
-      else throw badRequest('这个节点不能编辑');
+      else throw badRequest('图像节点请通过「提示词」修改后重新生成');
       // 改的是内容，不是重新生成：保持 input_hash，让它不显示过期；output_hash 变了，下游自然过期
       await tx`update drama_nodes set output = ${tx.json(out as any)}, output_hash = ${sha(out)}, approved = false, updated_at = now() where id = ${nodeId}`;
       if (row.type === 'outline') await reconcileEpisodes(tx, org.orgId, node.drama_id, out as OutlineOutput);
+      if (row.type === 'breakdown') await reconcileAssets(tx, org.orgId, node.drama_id, out as BreakdownOutput);
+    }
+    if (body.params && (row.type === 'portrait' || row.type === 'location')) {
+      const prompt = str(body.params.prompt, 2000);
+      await tx`update drama_nodes set params = ${tx.json({ ...row.params, prompt: prompt || undefined } as any)}, updated_at = now() where id = ${nodeId}`;
     }
     if (typeof body.approved === 'boolean') await tx`update drama_nodes set approved = ${body.approved}, updated_at = now() where id = ${nodeId}`;
   });

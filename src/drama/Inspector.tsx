@@ -3,8 +3,9 @@ import { Check, ExternalLink, X } from 'lucide-react';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router';
 import { Badge, Button, Field, IconButton, Input, Segmented, Textarea } from '@/components/ui';
+import { mediaUrl } from '@/cloud/providers';
 import { cx } from '@/lib/util';
-import { GENRES, NODE_LABEL, type BreakdownOutput, type DramaNodeDTO, type DramaPreset, type OutlineOutput, type ScriptOutput, type StoryboardOutput } from '@/shared/drama';
+import { GENRES, NODE_LABEL, type BreakdownOutput, type DramaNodeDTO, type DramaPreset, type ImageOutput, type OutlineOutput, type ScriptOutput, type StoryboardOutput } from '@/shared/drama';
 
 interface Props {
   node: DramaNodeDTO;
@@ -18,6 +19,7 @@ interface Props {
   onSaveOutput: (output: unknown) => Promise<void>;
   onApprove: (approved: boolean) => void;
   onSavePreset: (p: Partial<DramaPreset>) => Promise<void>;
+  onSaveParams: (params: { prompt?: string }) => Promise<void>;
 }
 
 const Label = ({ children }: { children: ReactNode }) => <div className="mb-1 text-[11px] font-medium tracking-wide text-ink-3">{children}</div>;
@@ -246,6 +248,33 @@ function StoryboardView({ d, set, ro }: { d: StoryboardOutput; set: (d: Storyboa
   );
 }
 
+// ───────── 图像节点（人物定妆 / 场景图） ─────────
+
+function ImageView({ node, ro, onSave }: { node: DramaNodeDTO; ro: boolean; onSave: Props['onSaveParams'] }) {
+  const out = node.output as ImageOutput | null;
+  const custom = typeof node.params.prompt === 'string' ? (node.params.prompt as string) : '';
+  const [prompt, setPrompt] = useState(custom || out?.prompt || '');
+  useEffect(() => setPrompt(custom || out?.prompt || ''), [custom, out?.prompt, node.updatedAt]);
+  const dirty = prompt.trim() !== (custom || out?.prompt || '');
+  return (
+    <div className="space-y-4">
+      {node.status === 'failed' && node.error && <p className="rounded-lg bg-seal/[.07] px-3 py-2 text-[12.5px] leading-relaxed text-seal" role="alert">{node.error}</p>}
+      {out && <img src={mediaUrl(out.assetId)} alt={node.title} className="w-full rounded-xl border border-line" />}
+      <div>
+        <Label>提示词{custom ? '（已自定义）' : '（自动生成，可修改）'}</Label>
+        <Area value={prompt} onChange={setPrompt} disabled={ro} rows={5} />
+        {!ro && (
+          <div className="mt-2 flex gap-2">
+            <Button size="sm" variant="outline" disabled={!dirty} onClick={() => onSave({ prompt: prompt.trim() })}>保存提示词</Button>
+            {custom && <Button size="sm" variant="ghost" onClick={() => onSave({ prompt: '' })}>恢复自动生成</Button>}
+          </div>
+        )}
+        <p className="mt-2 text-[12px] leading-relaxed text-ink-3">修改提示词后，节点会显示「已过期」，点节点上的「重算」生成新图；旧图会在新图成功后清理。</p>
+      </div>
+    </div>
+  );
+}
+
 // ───────── 外壳 ─────────
 
 export function Inspector(p: Props) {
@@ -258,13 +287,17 @@ export function Inspector(p: Props) {
   const body = (() => {
     if (node.type === 'source') return <SourceForm preset={p.preset} chapterCount={p.chapterCount} canWrite={p.canWrite} onSave={p.onSavePreset} />;
     if (node.status === 'running') return <p className="text-[13px] text-ink-3">正在生成……完成后这里会自动刷新。</p>;
+    if ((node.type === 'portrait' || node.type === 'location') && !hasOutput) return <ImageView node={node} ro={ro} onSave={p.onSaveParams} />;
     if (node.status === 'failed' && !hasOutput) return <p className="text-[13px] leading-relaxed text-seal">{node.error ?? '运行失败'}</p>;
+    if (!hasOutput && (node.type === 'portrait' || node.type === 'location')) return <ImageView node={node} ro={ro} onSave={p.onSaveParams} />;
     if (!hasOutput) return <p className="text-[13px] leading-relaxed text-ink-3">{NODE_LABEL[node.type].hint}。点击节点上的「运行」，或在顶部「一键运行」。</p>;
     switch (node.type) {
       case 'breakdown': return <BreakdownView d={draft} set={setDraft} ro={ro} />;
       case 'outline': return <OutlineView d={draft} set={setDraft} ro={ro} chapterIds={p.chapterIds} novelId={p.novelId} />;
       case 'script': return <ScriptView d={draft} set={setDraft} ro={ro} chapterIds={p.chapterIds} novelId={p.novelId} />;
       case 'storyboard': return <StoryboardView d={draft} set={setDraft} ro={ro} />;
+      case 'portrait':
+      case 'location': return <ImageView node={node} ro={ro} onSave={p.onSaveParams} />;
     }
   })();
 

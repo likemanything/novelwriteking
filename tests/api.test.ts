@@ -580,7 +580,36 @@ test('短剧画布：建图、流水线运行、过期判断、权限、导出�
     await author.json('POST', `/api/drama/nodes/${byType(p, 'outline')[0].id}/run`, {}, 202);
     p = await waitIdle((x) => byType(x, 'script').length === 3);
     assert.equal(byType(p, 'storyboard').length, 3);
-    assert.equal(p.edges.length, 2 + 3 * 2);
+    assert.equal(p.edges.length, 2 + 3 * 2 + 2, '含拆解 → 人物 / 场景图像节点的两条连线');
+
+    // 图像节点：拆解后自动出现人物与场景节点；批量生图需要先接入图像服务
+    assert.equal(byType(p, 'portrait').length, 1);
+    assert.equal(byType(p, 'location').length, 1);
+    assert.equal(byType(p, 'portrait')[0].status, 'idle');
+    await author.json('POST', `/api/drama/nodes/${byType(p, 'portrait')[0].id}/run`, {}, 202);
+    p = await waitIdle((x) => byType(x, 'portrait')[0].status === 'failed');
+    assert.match(byType(p, 'portrait')[0].error, /图像模型/);
+    const imgProv = await admin.json('POST', '/api/providers', {
+      name: '画布测试图像',
+      apiKey: 'img-key',
+      spec: { kind: 'image', baseUrl: `${mockUrl}/media`, auth: { type: 'bearer' }, model: 'm', submit: { path: '/img/generations', body: { model: '{{model}}', prompt: '{{prompt}}', size: '{{size}}' }, response: { resultB64: 'data[0].b64_json' } } },
+    });
+    await author.json('POST', `/api/drama/${d.id}/run-media`, {}, 202);
+    p = await waitIdle((x) => byType(x, 'portrait')[0].status === 'done' && byType(x, 'location')[0].status === 'done');
+    const asset1 = byType(p, 'portrait')[0].output.assetId;
+    assert.match(mediaSeen.filter((m) => m.path === '/media/img/generations').at(-1)!.body.prompt, /林澈/, '提示词包含人物外貌');
+    assert.equal((await author.req('GET', `/api/media/${asset1}`)).status, 200);
+    // 改提示词 → 节点过期；重新生成后旧图被清理、新图可访问
+    const pid = byType(p, 'portrait')[0].id;
+    await author.json('PATCH', `/api/drama/nodes/${pid}`, { params: { prompt: '自定义提示词' } });
+    p = await get();
+    assert.equal(byType(p, 'portrait')[0].stale, true);
+    await author.json('POST', `/api/drama/nodes/${pid}/run`, {}, 202);
+    p = await waitIdle((x) => byType(x, 'portrait')[0].status === 'done' && !byType(x, 'portrait')[0].stale);
+    assert.notEqual(byType(p, 'portrait')[0].output.assetId, asset1);
+    assert.equal((await author.req('GET', `/api/media/${asset1}`)).status, 404, '旧图已清理');
+    assert.equal(mediaSeen.filter((m) => m.path === '/media/img/generations').at(-1)!.body.prompt, '自定义提示词');
+    await admin.json('DELETE', `/api/providers/${imgProv.id}`);
 
     // 权限与隔离
     assert.equal((await get(viewer)).id, d.id);

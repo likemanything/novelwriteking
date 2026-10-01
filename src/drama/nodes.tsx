@@ -1,11 +1,12 @@
 /** 画布上的节点卡片：每一种节点用编剧/导演的语言说话，而不是技术参数。 */
 import { Handle, Position, type NodeProps } from '@xyflow/react';
-import { AlertTriangle, BookOpen, Clapperboard, Film, ListOrdered, Play, RefreshCw, ScrollText, Square, Wand2 } from 'lucide-react';
+import { AlertTriangle, BookOpen, Clapperboard, Film, ListOrdered, Mountain, Play, RefreshCw, ScrollText, Square, UserRound, Wand2 } from 'lucide-react';
 import { createContext, useContext } from 'react';
+import { mediaUrl } from '@/cloud/providers';
 import { Seal } from '@/components/Seal';
 import { InkSpinner } from '@/components/ui';
 import { cx } from '@/lib/util';
-import { GENRES, NODE_LABEL, type BreakdownOutput, type DramaNodeDTO, type DramaPreset, type OutlineOutput, type ScriptOutput, type StoryboardOutput } from '@/shared/drama';
+import { GENRES, NODE_LABEL, type BreakdownOutput, type DramaNodeDTO, type ImageOutput, type DramaPreset, type OutlineOutput, type ScriptOutput, type StoryboardOutput } from '@/shared/drama';
 
 export interface DramaCtxValue {
   canWrite: boolean;
@@ -16,7 +17,7 @@ export interface DramaCtxValue {
 
 export const DramaCtx = createContext<DramaCtxValue | null>(null);
 
-const ICON = { source: BookOpen, breakdown: Wand2, outline: ListOrdered, script: ScrollText, storyboard: Clapperboard } as const;
+const ICON = { source: BookOpen, breakdown: Wand2, outline: ListOrdered, script: ScrollText, storyboard: Clapperboard, portrait: UserRound, location: Mountain } as const;
 
 export type FlowNodeData = { node: DramaNodeDTO } & Record<string, unknown>;
 
@@ -84,6 +85,12 @@ function Summary({ n, preset }: { n: DramaNodeDTO; preset: DramaPreset }) {
           </p>
         </>
       );
+    }
+    case 'portrait':
+    case 'location': {
+      const im = o as ImageOutput | null;
+      if (!im) return <p className={muted}>{n.type === 'portrait' ? '用这张图统一人物外貌。' : '用这张图统一场景色调。'}需要先在设置里接入图像模型。</p>;
+      return <img src={mediaUrl(im.assetId)} alt={n.title} loading="lazy" className={cx('nodrag w-full rounded-lg object-cover', n.type === 'portrait' ? 'h-44 object-top' : 'h-32')} />;
     }
     case 'storyboard': {
       const s = o as StoryboardOutput | null;

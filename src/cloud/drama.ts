@@ -11,11 +11,12 @@ export const dramaApi = {
   setPreset: (id: string, preset: Partial<DramaPreset>) => api<{ project: DramaProjectDTO }>('PATCH', `/api/drama/${id}`, { preset }),
   layout: (id: string, positions: { id: string; x: number; y: number }[]) => api('PUT', `/api/drama/${id}/layout`, { positions }),
   runAll: (id: string) => api('POST', `/api/drama/${id}/run-all`, {}),
+  runMedia: (id: string) => api('POST', `/api/drama/${id}/run-media`, {}),
   cancel: (id: string) => api('POST', `/api/drama/${id}/cancel`, {}),
   remove: (id: string) => api('DELETE', `/api/drama/${id}`),
   runNode: (nodeId: string) => api('POST', `/api/drama/nodes/${nodeId}/run`, {}),
   cancelNode: (nodeId: string) => api('POST', `/api/drama/nodes/${nodeId}/cancel`, {}),
-  patchNode: (nodeId: string, body: { output?: unknown; approved?: boolean }) => api<{ project: DramaProjectDTO }>('PATCH', `/api/drama/nodes/${nodeId}`, body),
+  patchNode: (nodeId: string, body: { output?: unknown; approved?: boolean; params?: { prompt?: string } }) => api<{ project: DramaProjectDTO }>('PATCH', `/api/drama/nodes/${nodeId}`, body),
   export: async (id: string, format: 'md' | 'csv') => {
     const res = await apiFetch('GET', `/api/drama/${id}/export?format=${format}`);
     return (await res.json()) as { filename: string; mime: string; content: string };

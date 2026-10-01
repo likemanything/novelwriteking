@@ -1,6 +1,6 @@
 /** 小说 → 短剧画布：前后端共用的数据结构与默认值。 */
 
-export type DramaNodeType = 'source' | 'breakdown' | 'outline' | 'script' | 'storyboard';
+export type DramaNodeType = 'source' | 'breakdown' | 'outline' | 'script' | 'storyboard' | 'portrait' | 'location';
 export type DramaNodeStatus = 'idle' | 'running' | 'done' | 'failed';
 
 export const GENRES = [
@@ -155,4 +155,13 @@ export const NODE_LABEL: Record<DramaNodeType, { title: string; hint: string }> 
   outline: { title: '分集大纲', hint: '每集钩子、反转与结尾悬念' },
   script: { title: '单集剧本', hint: '场景化剧本，含对白与旁白' },
   storyboard: { title: '分镜脚本', hint: '镜头、景别、运镜、台词与首帧' },
+  portrait: { title: '角色定妆', hint: '统一人物外貌，后续每个镜头都以它为参考' },
+  location: { title: '场景概念图', hint: '统一场景色调与氛围' },
 };
+
+/** 图像类节点的输出 */
+export interface ImageOutput {
+  assetId: string;
+  prompt: string;
+  mime: string;
+}

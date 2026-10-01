@@ -6,6 +6,7 @@ import { composeMany, fetchInspiration } from '@/ai/inspiration';
 import { ThreadField } from '@/components/ThreadField';
 import { WritingScene } from '@/components/WritingScene';
 import { Button, Kbd } from '@/components/ui';
+import { toast } from '@/store/ui';
 
 export function useTypewriter(lines: string[], active: boolean) {
   const [text, setText] = useState('');
@@ -116,6 +117,7 @@ function SeedBox({ onEnergy, onSubmit }: { onEnergy: () => void; onSubmit: (seed
         },
       });
       if (c.signal.aborted) return;
+      if (r.fellBack) toast('模型暂时没有响应，这条灵感来自本地组合', { tone: 'info' });
       if (r.source === 'local') {
         // 本地组合：逐字落进输入框
         let i = 0;

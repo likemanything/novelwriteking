@@ -4,11 +4,12 @@
  */
 import '@xyflow/react/dist/style.css';
 import { Background, BackgroundVariant, Controls, MiniMap, ReactFlow, ReactFlowProvider, useNodesInitialized, useNodesState, useReactFlow, type Edge, type Node } from '@xyflow/react';
-import { AlertTriangle, ArrowRight, ChevronDown, Clapperboard, Download, LayoutGrid, MoreHorizontal, Play, Square, Trash2 } from 'lucide-react';
+import { AlertTriangle, ArrowRight, ChevronDown, Clapperboard, Download, ImagePlus, LayoutGrid, MoreHorizontal, Play, Square, Trash2 } from 'lucide-react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router';
 import { useStageProfile } from '@/cloud/models';
+import { useProviders } from '@/cloud/providers';
 import { useCaps } from '@/cloud/session';
 import { dramaApi, useDramaProject } from '@/cloud/drama';
 import { useIsDark } from '@/components/ThemeToggle';
@@ -93,8 +94,16 @@ function CreateCanvas({ chapterCount, onCreate }: { chapterCount: number; onCrea
 }
 
 function layoutOf(project: DramaProjectDTO) {
-  const COL = { source: 0, breakdown: 400, outline: 800, script: 1240, storyboard: 1680 } as const;
-  return project.nodes.map((n) => ({ id: n.id, x: COL[n.type], y: n.type === 'script' || n.type === 'storyboard' ? (Number(n.params.episode) - 1) * 320 : 0 }));
+  const COL = { source: 0, breakdown: 400, outline: 800, script: 1240, storyboard: 1680, portrait: 400, location: 800 } as const;
+  const idx = new Map<string, number>();
+  return project.nodes.map((n) => {
+    if (n.type === 'portrait' || n.type === 'location') {
+      const i = idx.get(n.type) ?? 0;
+      idx.set(n.type, i + 1);
+      return { id: n.id, x: COL[n.type], y: 300 + i * 300 };
+    }
+    return { id: n.id, x: COL[n.type], y: n.type === 'script' || n.type === 'storyboard' ? (Number(n.params.episode) - 1) * 320 : 0 };
+  });
 }
 
 function Canvas({ project, setProject }: { project: DramaProjectDTO; setProject: (p: DramaProjectDTO) => void }) {
@@ -104,6 +113,7 @@ function Canvas({ project, setProject }: { project: DramaProjectDTO; setProject:
   const chapters = useLiveQuery(() => db.chapters.where('projectId').equals(novel.id).toArray(), [novel.id]) ?? [];
   const chapterIds = useMemo(() => Object.fromEntries(chapters.map((c) => [c.index, c.id])), [chapters]);
   const plan = useStageProfile('plan');
+  const imageProvider = useProviders((s) => s.assigned.image);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
   // 一开始就带着节点挂载，这样 ReactFlow 自己会等测量完成再取景
@@ -180,9 +190,13 @@ function Canvas({ project, setProject }: { project: DramaProjectDTO; setProject:
     [caps.write, project.preset, run],
   );
 
-  const runnable = project.nodes.filter((n) => n.type !== 'source');
+  const isMedia = (t: string) => t === 'portrait' || t === 'location';
+  const runnable = project.nodes.filter((n) => n.type !== 'source' && !isMedia(n.type));
+  const mediaNodes = project.nodes.filter((n) => isMedia(n.type));
+  const mediaTodo = mediaNodes.filter((n) => n.status !== 'done' || n.stale).length;
+  const mediaRunning = mediaNodes.some((n) => n.status === 'running');
   const fresh = runnable.filter((n) => n.status === 'done' && !n.stale).length;
-  const running = runnable.some((n) => n.status === 'running');
+  const running = runnable.some((n) => n.status === 'running') || mediaRunning;
   const failed = runnable.filter((n) => n.status === 'failed').length;
   const stale = runnable.filter((n) => n.stale).length;
   const selected = project.nodes.find((n) => n.id === selectedId) ?? null;
@@ -236,6 +250,29 @@ function Canvas({ project, setProject }: { project: DramaProjectDTO; setProject:
                 {fresh === 0 ? '一键运行' : '继续运行'}
               </Button>
             ))}
+          {caps.write && mediaNodes.length > 0 && !running && (
+            <Button
+              variant="outline"
+              size="sm"
+              icon={<ImagePlus className="size-3.5" />}
+              disabled={mediaTodo === 0}
+              title={mediaTodo === 0 ? '角色与场景图都是最新的' : '生成图像会调用图像模型并产生费用'}
+              onClick={async () => {
+                if (!imageProvider) {
+                  toast('还没有接入图像模型', { tone: 'error', detail: '请管理员在「设置 → 图像 · 视频 · 配音模型」里接入并启用。' });
+                  return;
+                }
+                try {
+                  await dramaApi.runMedia(project.id);
+                  toast(`开始生成 ${mediaTodo} 张图`, { detail: '角色定妆照与场景图正在逐张生成。' });
+                } catch (e) {
+                  toastError(e, '无法运行');
+                }
+              }}
+            >
+              生成角色与场景图{mediaTodo > 0 ? `（${mediaTodo}）` : ''}
+            </Button>
+          )}
           <Menu
             trigger={(p) => (
               <Button {...p} variant="outline" size="sm" icon={<Download className="size-3.5" />}>
@@ -337,6 +374,14 @@ function Canvas({ project, setProject }: { project: DramaProjectDTO; setProject:
                 patch((await dramaApi.patchNode(selected.id, { approved })).project);
               } catch (e) {
                 toastError(e);
+              }
+            }}
+            onSaveParams={async (params) => {
+              try {
+                patch((await dramaApi.patchNode(selected.id, { params })).project);
+                toast('提示词已保存', { tone: 'success' });
+              } catch (e) {
+                toastError(e, '保存失败');
               }
             }}
             onSavePreset={async (preset) => {

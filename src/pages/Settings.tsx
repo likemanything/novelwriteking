@@ -13,6 +13,7 @@ import { api } from '@/cloud/api';
 import { refreshModels, useModels } from '@/cloud/models';
 import { useCaps } from '@/cloud/session';
 import { ConnectModel, DetectTrack, useConnector } from '@/components/ConnectModel';
+import { MediaProviders } from '@/components/MediaProviders';
 import { Badge, Button, ConfirmDialog, Field, IconButton, Input, SectionTitle, Segmented, Toggle } from '@/components/ui';
 import { db, rawDb } from '@/lib/db';
 import { exportBackup } from '@/lib/export';
@@ -382,6 +383,13 @@ export default function Settings() {
             }
           }}
         />
+
+        {/* 媒体模型 */}
+        <section className="mt-14">
+          <h2 className="font-serif text-[20px] font-semibold">图像 · 视频 · 配音模型</h2>
+          <p className="mb-5 text-[12.5px] text-ink-3">用于短剧：角色定妆照、场景图、镜头视频与配音。任何厂商都能接入——用一份「适配声明」描述它的调用方式即可。</p>
+          <MediaProviders canEdit={caps.manageModels} />
+        </section>
 
         {/* 偏好 */}
         <section className="mt-14">

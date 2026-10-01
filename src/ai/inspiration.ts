@@ -47,13 +47,14 @@ const clean = (t: string) =>
  * 取一句新灵感。onText 会在模型逐字输出时被调用（用于边写边显示）；
  * 返回最终文本与来源（model：模型现写；local：本地组合）。
  */
-export async function fetchInspiration(o: { signal?: AbortSignal; onText?: (t: string) => void } = {}): Promise<{ text: string; source: 'model' | 'local' }> {
+export async function fetchInspiration(o: { signal?: AbortSignal; onText?: (t: string) => void } = {}): Promise<{ text: string; source: 'model' | 'local'; fellBack?: boolean }> {
   const profile = profileFor('plan');
   const remember = (t: string) => {
     recent.unshift(t);
     recent.length = Math.min(recent.length, 8);
     return t;
   };
+  let failed = false;
   if (profile.provider === 'cloud') {
     try {
       const text = await streamChat({
@@ -64,7 +65,8 @@ export async function fetchInspiration(o: { signal?: AbortSignal; onText?: (t: s
         demo: () => composeInspiration(recent),
         signal: o.signal,
         temperature: 1.1,
-        maxTokens: 200,
+        // 带「思考」的模型会先消耗一部分额度再作答，上限太小会得到空内容
+        maxTokens: 2000,
         onToken: (_c, full) => o.onText?.(clean(full)),
       });
       const t = clean(text);
@@ -73,6 +75,7 @@ export async function fetchInspiration(o: { signal?: AbortSignal; onText?: (t: s
       if (o.signal?.aborted) throw error;
       /* 模型出错时退回本地组合，不打断创作 */
     }
+    failed = true;
   }
-  return { text: remember(composeInspiration(recent)), source: 'local' };
+  return { text: remember(composeInspiration(recent)), source: 'local', fellBack: failed };
 }

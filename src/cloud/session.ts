@@ -12,6 +12,7 @@ import { capabilities, type Capabilities, type EffectiveRole } from '@/shared/pe
 import { toast } from '@/store/ui';
 import { api, ApiError, onUnauthorized, setApiOrg } from './api';
 import { refreshModels } from './models';
+import { refreshProviders } from './providers';
 import { flushSync, forgetWorkspace, markChanged, onServerEvent, pendingCount, startSync, stopSync } from './sync';
 
 type Status = 'loading' | 'anon' | 'opening' | 'ready' | 'error';
@@ -150,7 +151,11 @@ async function openOrg(me: MeResponse) {
     throw error;
   }
   void refreshModels();
-  onServerEvent('models', () => void refreshModels());
+  void refreshProviders();
+  onServerEvent('models', () => {
+    void refreshModels();
+    void refreshProviders();
+  });
   onServerEvent('members', () => void refreshMe());
   useSession.setState({ status: 'ready' });
 }
