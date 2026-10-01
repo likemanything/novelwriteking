@@ -100,7 +100,7 @@ export function LoginForm({ invitation, inviteOrgName, onDone }: { invitation?: 
             </Button>
           </div>
           {devCode && (
-            <p className="rounded-lg bg-gold/10 px-3 py-2 text-[12px] text-ink-2">
+            <p className="rounded-lg bg-gold/10 px-3 py-2 text-fs-xs text-ink-2">
               开发模式：验证码是 <button type="button" onClick={() => setCode(devCode)} className="font-mono font-semibold underline">{devCode}</button>（点击填入）
             </p>
           )}
@@ -116,7 +116,7 @@ export function LoginForm({ invitation, inviteOrgName, onDone }: { invitation?: 
             </>
           )}
           {!invitation && !needInvite && (
-            <button type="button" onClick={() => setNeedInvite(true)} className="self-start text-[12px] text-ink-3 underline-offset-2 hover:text-ink hover:underline">
+            <button type="button" onClick={() => setNeedInvite(true)} className="self-start text-fs-xs text-ink-3 underline-offset-2 hover:text-ink hover:underline">
               第一次来？我有邀请码
             </button>
           )}
@@ -132,7 +132,7 @@ export function LoginForm({ invitation, inviteOrgName, onDone }: { invitation?: 
       )}
 
       {error && (
-        <p role="alert" className="rounded-lg bg-seal/[.07] px-3 py-2 text-[12.5px] text-seal">
+        <p role="alert" className="rounded-lg bg-seal/[.07] px-3 py-2 text-fs-xs text-seal">
           {error}
         </p>
       )}
@@ -152,12 +152,12 @@ export function AuthShell({ title, subtitle, children }: { title: string; subtit
         <div className="mb-6 flex items-center gap-3">
           <Seal size={40} />
           <div>
-            <div className="font-serif text-[22px] leading-tight font-semibold tracking-[.2em]">墨织</div>
-            <div className="text-[10px] tracking-[.32em] text-ink-3 uppercase">Inkloom</div>
+            <div className="font-serif text-fs-xl leading-tight font-semibold tracking-[.2em]">墨织</div>
+            <div className="text-fs-2xs tracking-[.32em] text-ink-3 uppercase">Inkloom</div>
           </div>
         </div>
-        <h1 className="font-serif text-[20px] font-semibold">{title}</h1>
-        {subtitle && <p className="mt-1 mb-5 text-[13px] leading-relaxed text-ink-3">{subtitle}</p>}
+        <h1 className="font-serif text-fs-xl font-semibold">{title}</h1>
+        {subtitle && <p className="mt-1 mb-5 text-fs-sm leading-relaxed text-ink-3">{subtitle}</p>}
         {!subtitle && <div className="mb-5" />}
         {children}
       </motion.div>
@@ -182,7 +182,7 @@ export default function Login() {
           window.location.assign(target);
         }}
       />
-      <Link to="/" className="mt-5 inline-block text-[12.5px] text-ink-3 underline-offset-2 hover:text-ink hover:underline">
+      <Link to="/" className="mt-5 inline-block text-fs-xs text-ink-3 underline-offset-2 hover:text-ink hover:underline">
         ← 回到首页
       </Link>
     </AuthShell>

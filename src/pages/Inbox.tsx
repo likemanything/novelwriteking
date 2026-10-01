@@ -33,9 +33,9 @@ const STATE_LABEL: Record<keyof Omit<CharacterState, 'sourceChapter'>, string> =
 function Editor({ p, value, onChange, characterName }: { p: Proposal; value: Record<string, any>; onChange: (v: Record<string, any>) => void; characterName?: string }) {
   switch (p.kind) {
     case 'summary':
-      return <Textarea value={value.summary ?? ''} onChange={(e) => onChange({ ...value, summary: e.target.value })} className="font-serif text-[14px] leading-7" />;
+      return <Textarea value={value.summary ?? ''} onChange={(e) => onChange({ ...value, summary: e.target.value })} className="font-serif text-fs-base leading-7" />;
     case 'story-so-far':
-      return <Textarea value={value.text ?? ''} onChange={(e) => onChange({ ...value, text: e.target.value })} minRows={3} className="font-serif text-[14px] leading-7" />;
+      return <Textarea value={value.text ?? ''} onChange={(e) => onChange({ ...value, text: e.target.value })} minRows={3} className="font-serif text-fs-base leading-7" />;
     case 'character-state': {
       const before = (value.before ?? {}) as CharacterState;
       const after = (value.after ?? {}) as CharacterState;
@@ -43,10 +43,10 @@ function Editor({ p, value, onChange, characterName }: { p: Proposal; value: Rec
         <div className="space-y-2">
           {(Object.keys(STATE_LABEL) as (keyof typeof STATE_LABEL)[]).map((k) => (
             <div key={k} className="grid grid-cols-[3em_1fr] items-start gap-3">
-              <span className="pt-2 text-[12px] text-ink-3">{STATE_LABEL[k]}</span>
+              <span className="pt-2 text-fs-xs text-ink-3">{STATE_LABEL[k]}</span>
               <div>
-                {before[k] && before[k] !== after[k] && <div className="px-3 pb-1 text-[12px] text-ink-3 line-through decoration-seal/50">{before[k]}</div>}
-                <Input value={after[k] ?? ''} onChange={(e) => onChange({ ...value, after: { ...after, [k]: e.target.value } })} className="h-9 text-[13px]" aria-label={`${characterName ?? ''}${STATE_LABEL[k]}`} />
+                {before[k] && before[k] !== after[k] && <div className="px-3 pb-1 text-fs-xs text-ink-3 line-through decoration-seal/50">{before[k]}</div>}
+                <Input value={after[k] ?? ''} onChange={(e) => onChange({ ...value, after: { ...after, [k]: e.target.value } })} className="h-9 text-fs-sm" aria-label={`${characterName ?? ''}${STATE_LABEL[k]}`} />
               </div>
             </div>
           ))}
@@ -60,21 +60,21 @@ function Editor({ p, value, onChange, characterName }: { p: Proposal; value: Rec
             <Input value={value.name ?? ''} onChange={(e) => onChange({ ...value, name: e.target.value })} className="h-9 font-serif" aria-label="姓名" />
             <Input value={value.role ?? ''} onChange={(e) => onChange({ ...value, role: e.target.value })} className="h-9" aria-label="角色定位" />
           </div>
-          <Textarea value={value.summary ?? ''} onChange={(e) => onChange({ ...value, summary: e.target.value })} className="text-[13.5px]" />
+          <Textarea value={value.summary ?? ''} onChange={(e) => onChange({ ...value, summary: e.target.value })} className="text-fs-sm" />
         </div>
       );
     case 'world-fact':
       return (
         <div className="space-y-2">
           <Input value={value.name ?? ''} onChange={(e) => onChange({ ...value, name: e.target.value })} className="h-9 font-serif" aria-label="设定名称" />
-          <Textarea value={value.content ?? ''} onChange={(e) => onChange({ ...value, content: e.target.value })} className="text-[13.5px]" />
+          <Textarea value={value.content ?? ''} onChange={(e) => onChange({ ...value, content: e.target.value })} className="text-fs-sm" />
         </div>
       );
     case 'thread-progress':
       return (
         <div className="space-y-2">
-          <Textarea value={value.progress ?? ''} onChange={(e) => onChange({ ...value, progress: e.target.value })} className="text-[13.5px]" />
-          <label className="flex items-center justify-between text-[12.5px] text-ink-2">
+          <Textarea value={value.progress ?? ''} onChange={(e) => onChange({ ...value, progress: e.target.value })} className="text-fs-sm" />
+          <label className="flex items-center justify-between text-fs-xs text-ink-2">
             这条故事线在本章完结了
             <Toggle checked={!!value.resolved} onChange={(v) => onChange({ ...value, resolved: v })} label="标记完结" />
           </label>
@@ -89,8 +89,8 @@ function Preview({ p, characterName }: { p: Proposal; characterName?: string }) 
     const after = (p.payload.after ?? {}) as CharacterState;
     return (
       <div className="space-y-1.5">
-        <p className="text-[13.5px] leading-relaxed text-ink-2">{p.detail}</p>
-        <dl className="mt-2 space-y-1 rounded-xl bg-ink/[.03] px-3 py-2.5 text-[12.5px]">
+        <p className="text-fs-sm leading-relaxed text-ink-2">{p.detail}</p>
+        <dl className="mt-2 space-y-1 rounded-xl bg-ink/[.03] px-3 py-2.5 text-fs-xs">
           {(Object.keys(STATE_LABEL) as (keyof typeof STATE_LABEL)[]).map((k) =>
             after[k] ? (
               <div key={k} className="flex gap-3">
@@ -112,7 +112,7 @@ function Preview({ p, characterName }: { p: Proposal; characterName?: string }) 
       </div>
     );
   }
-  return <p className={cx('text-[13.5px] leading-7 text-ink-2', (p.kind === 'summary' || p.kind === 'story-so-far') && 'font-serif text-[14.5px]')}>{p.detail}</p>;
+  return <p className={cx('text-fs-sm leading-7 text-ink-2', (p.kind === 'summary' || p.kind === 'story-so-far') && 'font-serif text-fs-base')}>{p.detail}</p>;
 }
 
 function ProposalCard({ p, index, characterName, threadColor }: { p: Proposal; index: number; characterName?: string; threadColor?: string }) {
@@ -147,7 +147,7 @@ function ProposalCard({ p, index, characterName, threadColor }: { p: Proposal; i
         </span>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="font-serif text-[16px] font-semibold">{p.title}</span>
+            <span className="font-serif text-fs-md font-semibold">{p.title}</span>
             <Badge tone={meta.tone}>{meta.label}</Badge>
           </div>
           <div className="mt-2">{editing ? <Editor p={p} value={value} onChange={setValue} characterName={characterName} /> : <Preview p={p} characterName={characterName} />}</div>
@@ -225,7 +225,7 @@ export default function Inbox() {
     <div className="h-full overflow-y-auto">
       {!caps.acceptProposals && (
         <div className="mx-auto max-w-6xl px-8 pt-6" role="status">
-          <div className="rounded-xl bg-gold/10 px-4 py-2.5 text-[12.5px] text-ink-2">你的角色不能处理设定变化，这里只能查看。</div>
+          <div className="rounded-xl bg-gold/10 px-4 py-2.5 text-fs-xs text-ink-2">你的角色不能处理设定变化，这里只能查看。</div>
         </div>
       )}
       <fieldset disabled={!caps.acceptProposals} className="contents">
@@ -237,7 +237,7 @@ export default function Inbox() {
             </Button>
           )}
         </SectionTitle>
-        <p className="mt-2 text-[13.5px] leading-relaxed text-ink-2">每次定稿后，AI 会从正文里整理出人物状态、新设定和故事线进展。它们不会自动写进设定集，需要你逐条确认，确认前可以先修改。</p>
+        <p className="mt-2 text-fs-sm leading-relaxed text-ink-2">每次定稿后，AI 会从正文里整理出人物状态、新设定和故事线进展。它们不会自动写进设定集，需要你逐条确认，确认前可以先修改。</p>
 
         {!pending.length ? (
           <Empty icon={<InboxIcon />} title="没有待确认的设定变化" action={<Button variant="ink" onClick={() => navigate(`/p/${project.id}/write`)}>去写作台</Button>}>
@@ -248,9 +248,9 @@ export default function Inbox() {
             {groups.map(([idx, items]) => (
               <section key={idx}>
                 <div className="mb-3 flex items-center gap-3">
-                  <span className="font-serif text-[13px] tracking-[.15em] text-seal">{idx ? `第${chineseNumber(idx)}章定稿` : '其它'}</span>
+                  <span className="font-serif text-fs-sm tracking-[.15em] text-seal">{idx ? `第${chineseNumber(idx)}章定稿` : '其它'}</span>
                   <span className="h-px flex-1 bg-line" />
-                  <span className="text-[11.5px] text-ink-3">{relativeTime(items[0].createdAt)}</span>
+                  <span className="text-fs-xs text-ink-3">{relativeTime(items[0].createdAt)}</span>
                 </div>
                 <ul className="space-y-3">
                   <AnimatePresence initial={false}>
@@ -278,15 +278,15 @@ export default function Inbox() {
             {showHistory && (
               <motion.ul initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="mt-3 space-y-1 overflow-hidden">
                 {(history ?? []).map((p) => (
-                  <li key={p.id} className="flex items-center gap-3 rounded-lg px-3 py-2 text-[13px]">
+                  <li key={p.id} className="flex items-center gap-3 rounded-lg px-3 py-2 text-fs-sm">
                     <span className={cx('flex size-5 items-center justify-center rounded-full', p.status === 'accepted' ? 'bg-seal/12 text-seal' : 'bg-ink/[.06] text-ink-3')}>
                       {p.status === 'accepted' ? <Check className="size-3" /> : <X className="size-3" />}
                     </span>
                     <span className={cx('flex-1 truncate', p.status === 'rejected' && 'text-ink-3 line-through decoration-ink/20')}>{p.title}</span>
-                    <span className="text-[11.5px] text-ink-3">{p.chapterIndex ? `第${p.chapterIndex}章` : ''}</span>
+                    <span className="text-fs-xs text-ink-3">{p.chapterIndex ? `第${p.chapterIndex}章` : ''}</span>
                   </li>
                 ))}
-                {!history?.length && <li className="px-3 py-2 text-[12.5px] text-ink-3">还没有处理过的记录。</li>}
+                {!history?.length && <li className="px-3 py-2 text-fs-xs text-ink-3">还没有处理过的记录。</li>}
               </motion.ul>
             )}
           </AnimatePresence>

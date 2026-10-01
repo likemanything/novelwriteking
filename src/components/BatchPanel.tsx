@@ -63,8 +63,8 @@ export function BatchPanel({ projectId, chapters, initialFrom, onClose }: { proj
             <FastForward className="size-4" />
           </span>
           <div className="min-w-0 flex-1">
-            <h2 className="font-serif text-[18px] font-semibold">批量写作</h2>
-            <p className="text-[12.5px] leading-relaxed text-ink-3">按顺序为多章起草。已有正文的章节会被跳过；这里只生成草稿，不会自动定稿。</p>
+            <h2 className="font-serif text-fs-lg font-semibold">批量写作</h2>
+            <p className="text-fs-xs leading-relaxed text-ink-3">按顺序为多章起草。已有正文的章节会被跳过；这里只生成草稿，不会自动定稿。</p>
           </div>
         </div>
 
@@ -89,8 +89,8 @@ export function BatchPanel({ projectId, chapters, initialFrom, onClose }: { proj
               </Field>
               <label className="flex items-center justify-between gap-4 self-end rounded-xl border border-line bg-paper px-4 py-2.5">
                 <span>
-                  <span className="block text-[13px] font-medium">每章自动审稿并修订</span>
-                  <span className="block text-[11.5px] text-ink-3">采纳“重要”与“建议”级意见，补全未写到的情节点</span>
+                  <span className="block text-fs-sm font-medium">每章自动审稿并修订</span>
+                  <span className="block text-fs-xs text-ink-3">采纳“重要”与“建议”级意见，补全未写到的情节点</span>
                 </span>
                 <Toggle checked={review} onChange={setReview} label="自动审稿并修订" />
               </label>
@@ -98,7 +98,7 @@ export function BatchPanel({ projectId, chapters, initialFrom, onClose }: { proj
 
             <ol className="mt-5 flex flex-wrap gap-1.5" aria-label="批量写作范围">
               {range.map((c) => (
-                <li key={c.id} className={cx('inline-flex h-7 items-center gap-1.5 rounded-full border px-2.5 text-[12px]', c.words ? 'border-dashed border-line-2 text-ink-3' : 'border-line bg-paper text-ink-2')} title={c.words ? '已有正文，将跳过' : ''}>
+                <li key={c.id} className={cx('inline-flex h-7 items-center gap-1.5 rounded-full border px-2.5 text-fs-xs', c.words ? 'border-dashed border-line-2 text-ink-3' : 'border-line bg-paper text-ink-2')} title={c.words ? '已有正文，将跳过' : ''}>
                   <span className="font-serif text-seal">{chineseNumber(c.index)}</span>
                   <span className={cx('max-w-[9em] truncate', c.words > 0 && 'line-through decoration-ink/25')}>{c.title}</span>
                 </li>
@@ -106,7 +106,7 @@ export function BatchPanel({ projectId, chapters, initialFrom, onClose }: { proj
             </ol>
 
             <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
-              <p className="text-[12px] text-ink-3">
+              <p className="text-fs-xs text-ink-3">
                 {toWrite.length ? `将起草 ${toWrite.length} 章${review ? '，每章多两次调用（审稿、修订）' : ''}` : '范围内的章节都已有正文'}
                 {!demo && toWrite.length > 0 && ` · 约 ${toWrite.length * (review ? 3 : 1)} 次模型调用`}
                 {busyElsewhere && ' · 另一部作品正在批量写作'}
@@ -141,7 +141,7 @@ function Progress({ projectId, onOpen, onDone, onAgain }: { projectId: string; o
         <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-ink/[.07]">
           <motion.div className="h-full rounded-full bg-seal" initial={false} animate={{ width: `${(finished / Math.max(1, toWrite)) * 100}%` }} transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }} />
         </div>
-        <span className="text-[12px] text-ink-3 tabular-nums">
+        <span className="text-fs-xs text-ink-3 tabular-nums">
           {finished} / {toWrite} 章 · {words.toLocaleString('zh-CN')} 字
         </span>
       </div>
@@ -161,16 +161,16 @@ function Progress({ projectId, onOpen, onDone, onAgain }: { projectId: string; o
                 transition={{ delay: i * 0.03 }}
                 className={cx('flex items-center gap-3 rounded-xl border px-4 py-2.5 transition-colors duration-500', live ? 'border-seal/30 bg-seal/[.04]' : it.status === 'done' ? 'border-line bg-paper' : 'border-transparent')}
               >
-                <span className="w-8 shrink-0 font-serif text-[13px] text-ink-3">{chineseNumber(it.index)}</span>
-                <span className={cx('min-w-0 flex-1 truncate text-[13.5px]', it.status === 'skipped' || it.status === 'stopped' ? 'text-ink-3' : 'text-ink')}>{it.title}</span>
-                {it.note && <span className="hidden max-w-[40%] truncate text-[11.5px] text-ink-3 md:inline" title={it.note}>{it.note}</span>}
-                {liveWords > 0 && <span className="w-16 text-right text-[12px] text-ink-3 tabular-nums">{liveWords.toLocaleString('zh-CN')} 字</span>}
-                <span className={cx('flex w-[4.5rem] shrink-0 items-center justify-end gap-1.5 text-[12px]', meta.cls)}>
+                <span className="w-8 shrink-0 font-serif text-fs-sm text-ink-3">{chineseNumber(it.index)}</span>
+                <span className={cx('min-w-0 flex-1 truncate text-fs-sm', it.status === 'skipped' || it.status === 'stopped' ? 'text-ink-3' : 'text-ink')}>{it.title}</span>
+                {it.note && <span className="hidden max-w-[40%] truncate text-fs-xs text-ink-3 md:inline" title={it.note}>{it.note}</span>}
+                {liveWords > 0 && <span className="w-16 text-right text-fs-xs text-ink-3 tabular-nums">{liveWords.toLocaleString('zh-CN')} 字</span>}
+                <span className={cx('flex w-[4.5rem] shrink-0 items-center justify-end gap-1.5 text-fs-xs', meta.cls)}>
                   {live ? <Loader className="size-3.5 animate-spin" /> : meta.icon}
                   {meta.label}
                 </span>
                 {(it.status === 'done' || it.status === 'failed' || live) && (
-                  <button onClick={() => onOpen(it.chapterId)} className="shrink-0 rounded-md px-2 py-0.5 text-[12px] text-ink-2 transition hover:bg-ink/[.05] hover:text-seal">
+                  <button onClick={() => onOpen(it.chapterId)} className="shrink-0 rounded-md px-2 py-0.5 text-fs-xs text-ink-2 transition hover:bg-ink/[.05] hover:text-seal">
                     {live ? '看直播' : '打开'}
                   </button>
                 )}
@@ -181,7 +181,7 @@ function Progress({ projectId, onOpen, onDone, onAgain }: { projectId: string; o
       </ol>
 
       <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
-        <p className="text-[12px] text-ink-3">
+        <p className="text-fs-xs text-ink-3">
           {running
             ? pauseRequested
               ? '写完当前这一章后就会停下。'

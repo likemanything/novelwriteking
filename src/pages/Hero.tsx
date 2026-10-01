@@ -54,7 +54,7 @@ function RevealLine({ text, delay, accent }: { text: string; delay: number; acce
         return (
           <motion.span
             key={i}
-            className={isAccent ? 'relative inline-block text-seal' : 'inline-block'}
+            className={isAccent ? 'relative inline-block text-seal [text-shadow:0_0_42px_var(--glow),0_0_2px_var(--glow)]' : 'inline-block'}
             initial={{ opacity: 0, y: '0.35em', filter: 'blur(10px)' }}
             animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
             transition={{ delay: delay + i * 0.055, duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
@@ -164,7 +164,7 @@ function SeedBox({ onEnergy, onSubmit }: { onEnergy: () => void; onSubmit: (seed
       className="group relative mt-10 max-w-2xl text-left lg:mx-0 mx-auto"
     >
       <div className="absolute -inset-px rounded-[26px] bg-gradient-to-br from-seal/40 via-gold/20 to-indigo/30 opacity-0 blur-md transition-opacity duration-700 group-focus-within:opacity-100" />
-      <div className="relative rounded-[24px] border border-line bg-paper-2/90 p-2 shadow-[var(--shadow-float)] backdrop-blur-md">
+      <div className="gborder glass relative rounded-[24px] p-2 shadow-[var(--elev-3)]">
         <div className="relative">
           <textarea
             ref={ref}
@@ -181,10 +181,10 @@ function SeedBox({ onEnergy, onSubmit }: { onEnergy: () => void; onSubmit: (seed
               if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) submit();
             }}
             aria-label="写下你的一句灵感"
-            className="block min-h-[104px] w-full resize-none bg-transparent px-5 pt-5 pb-2 font-serif text-[21px] leading-relaxed text-ink outline-none"
+            className="block min-h-[132px] w-full resize-none bg-transparent px-5 pt-5 pb-3 font-serif text-fs-xl leading-relaxed text-ink outline-none"
           />
           {!seed && (
-            <div className="pointer-events-none absolute top-5 left-5 right-5 font-serif text-[21px] leading-relaxed text-ink-3">
+            <div className="pointer-events-none absolute top-5 left-5 right-5 font-serif text-fs-xl leading-relaxed text-ink-3">
               {focused ? '写下你的一句灵感……' : placeholder}
               {!focused && <span className="ml-0.5 inline-block h-[1.05em] w-[2px] translate-y-[3px] bg-seal/70 animate-[caret_1.05s_steps(1)_infinite]" />}
             </div>
@@ -195,7 +195,7 @@ function SeedBox({ onEnergy, onSubmit }: { onEnergy: () => void; onSubmit: (seed
             <Button type="button" variant="ghost" size="sm" icon={<Dices className="size-4" />} onClick={dice} loading={rolling}>
               {rolling ? '正在想……' : '随机灵感'}
             </Button>
-            <div className="hidden items-center rounded-full border border-line p-0.5 sm:flex" role="radiogroup" aria-label="脑洞浓度">
+            <div className="flex items-center rounded-full border border-line bg-ink/[.03] p-0.5" role="radiogroup" aria-label="脑洞浓度">
               {LEVELS.map((l) => (
                 <button
                   key={l.value}
@@ -207,7 +207,7 @@ function SeedBox({ onEnergy, onSubmit }: { onEnergy: () => void; onSubmit: (seed
                     setLevel(l.value);
                     setLevelState(l.value);
                   }}
-                  className={`rounded-full px-2.5 py-0.5 text-[11.5px] transition ${level === l.value ? 'bg-seal/10 text-seal' : 'text-ink-3 hover:text-ink-2'}`}
+                  className={`rounded-full px-2.5 py-0.5 text-fs-xs transition ${level === l.value ? 'bg-seal/10 text-seal' : 'text-ink-3 hover:text-ink-2'}`}
                 >
                   {l.label}
                 </button>
@@ -215,7 +215,7 @@ function SeedBox({ onEnergy, onSubmit }: { onEnergy: () => void; onSubmit: (seed
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <span className="hidden items-center gap-1 text-[11px] text-ink-3 sm:flex">
+            <span className="hidden items-center gap-1 text-fs-2xs text-ink-3 sm:flex">
               <Kbd>⌘</Kbd>
               <Kbd>↵</Kbd>
             </span>
@@ -255,12 +255,11 @@ export function Hero({ topBar, onStart, children }: { topBar: ReactNode; onStart
 
   return (
     <section className="relative isolate min-h-[88vh] overflow-hidden">
-      <ThreadField className="absolute inset-0 -z-10 h-full w-full" energy={energy} converge={converge} />
-      <div className="absolute inset-x-0 bottom-0 -z-10 h-40 bg-gradient-to-b from-transparent to-paper" />
+      <ThreadField className="mask-fade-b absolute inset-0 -z-10 h-full w-full" energy={energy} converge={converge} />
       {topBar}
       <div className="mx-auto grid max-w-6xl items-center gap-6 px-6 pt-[5vh] pb-16 lg:grid-cols-[1.1fr_.9fr]">
         <div className="text-center lg:text-left">
-          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }} className="mb-7 inline-flex items-center gap-2 rounded-full border border-line bg-paper-2/60 px-3.5 py-1 text-[12px] tracking-[.18em] text-ink-2 backdrop-blur">
+          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }} className="mb-7 inline-flex items-center gap-2 rounded-full border border-line bg-paper-2/60 px-3.5 py-1 text-fs-xs tracking-[.18em] text-ink-2 backdrop-blur">
             <span className="size-1.5 rounded-full bg-seal" />
             AI 长篇小说 · 短剧创作工具
           </motion.div>
@@ -268,7 +267,7 @@ export function Hero({ topBar, onStart, children }: { topBar: ReactNode; onStart
             <RevealLine text="把一句灵感，" delay={0.15} />
             <RevealLine text="写成一部长篇。" delay={0.55} accent={[4, 6]} />
           </h1>
-          <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.3, duration: 1 }} className="mt-7 max-w-xl text-[15px] leading-8 text-ink-2 max-lg:mx-auto">
+          <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.3, duration: 1 }} className="mt-7 max-w-xl text-fs-md leading-8 text-ink-2 max-lg:mx-auto">
             先定人物、世界观和大纲，再一章一章写、审、改。
             <br className="hidden sm:block" />
             写完的小说，还能一键改编成短剧。
@@ -287,8 +286,8 @@ export function Hero({ topBar, onStart, children }: { topBar: ReactNode; onStart
               <p.icon className="size-4" strokeWidth={1.8} />
             </span>
             <span>
-              <span className="block text-[13px] font-medium text-ink">{p.title}</span>
-              <span className="block text-[12px] leading-relaxed text-ink-3">{p.text}</span>
+              <span className="block text-fs-sm font-medium text-ink">{p.title}</span>
+              <span className="block text-fs-xs leading-relaxed text-ink-3">{p.text}</span>
             </span>
           </motion.li>
         ))}

@@ -47,7 +47,7 @@ function GeneratePanel({ projectId, nextIndex, existing, target, onClose, welcom
       <div className="relative mt-8 overflow-hidden rounded-3xl border border-line bg-paper-2 p-6 shadow-[var(--shadow-float)]">
         <div className="pointer-events-none absolute -top-24 -right-16 size-72 rounded-full bg-seal/10 blur-3xl" />
         {welcome && !running && (
-          <div className="mb-5 font-serif text-[18px] leading-relaxed">
+          <div className="mb-5 font-serif text-fs-lg leading-relaxed">
             作品已经创建。接下来让 AI 写出前 {count} 章的细纲——
             <span className="text-ink-3">每章的目标、情节点和章末悬念。</span>
           </div>
@@ -72,7 +72,7 @@ function GeneratePanel({ projectId, nextIndex, existing, target, onClose, welcom
           </Field>
         </div>
         <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
-          <p className={cx('text-[12px]', overlap ? 'text-gold' : 'text-ink-3')}>
+          <p className={cx('text-fs-xs', overlap ? 'text-gold' : 'text-ink-3')}>
             {overlap ? `将更新第 ${from}–${Math.min(existing, from + count - 1)} 章的细纲（已写的正文和版本不受影响）。` : `将新增第 ${from}–${from + count - 1} 章。全书计划 ${target} 章。`}
           </p>
           <div className="flex gap-2">
@@ -95,7 +95,7 @@ function GeneratePanel({ projectId, nextIndex, existing, target, onClose, welcom
 
         {running && (
           <div className="mt-6 border-t border-line pt-5">
-            <div className="mb-3 flex items-center gap-2 text-[12.5px] text-ink-3">
+            <div className="mb-3 flex items-center gap-2 text-fs-xs text-ink-3">
               <span className="size-1.5 animate-[breathe_1.4s_ease-in-out_infinite] rounded-full bg-seal" />
               <span className="shimmer-text">正在规划第 {from + partial.length} 章</span>
               <span className="ml-auto tabular-nums">
@@ -107,10 +107,10 @@ function GeneratePanel({ projectId, nextIndex, existing, target, onClose, welcom
                 {partial.map((c, i) => (
                   <motion.div key={i} layout initial={{ opacity: 0, y: 12, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ type: 'spring', stiffness: 300, damping: 26 }} className="rounded-xl border border-line bg-paper px-4 py-3">
                     <div className="flex items-baseline gap-2">
-                      <span className="font-serif text-[12px] text-seal">第{chineseNumber(from + i)}章</span>
-                      <span className="truncate font-serif text-[15px] font-semibold">{c.title}</span>
+                      <span className="font-serif text-fs-xs text-seal">第{chineseNumber(from + i)}章</span>
+                      <span className="truncate font-serif text-fs-md font-semibold">{c.title}</span>
                     </div>
-                    <p className="mt-1 line-clamp-2 text-[12px] leading-relaxed text-ink-3">{c.goal}</p>
+                    <p className="mt-1 line-clamp-2 text-fs-xs leading-relaxed text-ink-3">{c.goal}</p>
                   </motion.div>
                 ))}
                 {Array.from({ length: Math.max(0, Math.min(2, count - partial.length)) }).map((_, i) => (
@@ -137,16 +137,16 @@ function ChapterRow({ chapter, characters, threads, open, onToggle, onDelete, fi
     <motion.li layout="position" className={cx('group relative rounded-2xl border transition-colors duration-300', open ? 'border-line-2 bg-paper-2 shadow-[var(--shadow-float)]' : 'border-transparent hover:border-line hover:bg-paper-2/60')}>
       <div className="flex items-center gap-4 px-4 py-3.5">
         <button onClick={onToggle} className="flex min-w-0 flex-1 items-center gap-4 text-left" aria-expanded={open}>
-          <span className="w-14 shrink-0 text-center font-serif text-[22px] leading-none text-ink-3 transition-colors group-hover:text-ink">{chineseNumber(chapter.index)}</span>
+          <span className="w-14 shrink-0 text-center font-serif text-fs-xl leading-none text-ink-3 transition-colors group-hover:text-ink">{chineseNumber(chapter.index)}</span>
           <span className="min-w-0 flex-1">
             <span className="flex items-center gap-2">
-              <span className="truncate font-serif text-[17px] font-semibold">{chapter.title}</span>
-              <span className="inline-flex items-center gap-1 text-[11px] text-ink-3">
+              <span className="truncate font-serif text-fs-lg font-semibold">{chapter.title}</span>
+              <span className="inline-flex items-center gap-1 text-fs-2xs text-ink-3">
                 <span className="size-1.5 rounded-full" style={{ background: STATUS_COLOR[chapter.status] }} />
                 {STATUS_META[chapter.status].label}
               </span>
             </span>
-            <span className="mt-0.5 block truncate text-[12.5px] text-ink-3">{chapter.blueprint.goal || '还没有写本章目标'}</span>
+            <span className="mt-0.5 block truncate text-fs-xs text-ink-3">{chapter.blueprint.goal || '还没有写本章目标'}</span>
           </span>
           <span className="hidden shrink-0 items-center gap-3 md:flex">
             <span className="flex gap-1">
@@ -156,12 +156,12 @@ function ChapterRow({ chapter, characters, threads, open, onToggle, onDelete, fi
             </span>
             <span className="flex -space-x-1.5">
               {cast.slice(0, 4).map((c) => (
-                <span key={c.id} title={c.name} className="flex size-6 items-center justify-center rounded-full border-2 border-paper font-serif text-[10px] text-white" style={{ background: c.color }}>
+                <span key={c.id} title={c.name} className="flex size-6 items-center justify-center rounded-full border-2 border-paper font-serif text-fs-2xs text-white" style={{ background: c.color }}>
                   {[...c.name][0]}
                 </span>
               ))}
             </span>
-            {chapter.words > 0 && <span className="w-16 text-right text-[12px] text-ink-3 tabular-nums">{chapter.words.toLocaleString('zh-CN')} 字</span>}
+            {chapter.words > 0 && <span className="w-16 text-right text-fs-xs text-ink-3 tabular-nums">{chapter.words.toLocaleString('zh-CN')} 字</span>}
           </span>
           <ChevronDown className={cx('size-4 shrink-0 text-ink-3 transition-transform duration-300', open && 'rotate-180')} />
         </button>
@@ -249,7 +249,7 @@ export default function Outline() {
             AI 生成细纲
           </Button>
         </SectionTitle>
-        <p className="mt-2 text-[13.5px] text-ink-2">
+        <p className="mt-2 text-fs-sm text-ink-2">
           {chapters.length} / {project.targetChapters} 章已规划。细纲越具体，草稿越不跑题。
         </p>
 
@@ -293,7 +293,7 @@ export default function Outline() {
           {acts.map((g) => (
             <section key={g.act + g.items[0].id}>
               <div className="mb-2 flex items-center gap-3 px-4">
-                <span className="font-serif text-[13px] tracking-[.2em] text-seal">{g.act}</span>
+                <span className="font-serif text-fs-sm tracking-[.2em] text-seal">{g.act}</span>
                 <span className="h-px flex-1 bg-line" />
                 <Badge>{g.items.length} 章</Badge>
               </div>

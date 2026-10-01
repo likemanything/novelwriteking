@@ -49,7 +49,7 @@ export function ThemeToggle({ className, withLabel }: { className?: string; with
           </motion.span>
         </AnimatePresence>
       </span>
-      {withLabel && <span className="text-[13px]">{dark ? '夜间' : '日间'}</span>}
+      {withLabel && <span className="text-fs-sm">{dark ? '夜间' : '日间'}</span>}
     </button>
   );
 }

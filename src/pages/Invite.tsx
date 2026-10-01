@@ -42,7 +42,7 @@ export default function Invite() {
   if (error && !preview) {
     return (
       <AuthShell title="邀请链接无法使用" subtitle={error}>
-        <Link to="/" className="text-[13px] text-ink-3 underline-offset-2 hover:text-ink hover:underline">
+        <Link to="/" className="text-fs-sm text-ink-3 underline-offset-2 hover:text-ink hover:underline">
           回到墨织
         </Link>
       </AuthShell>
@@ -60,14 +60,14 @@ export default function Invite() {
   return (
     <AuthShell title={`加入「${preview.orgName}」`} subtitle={`${who}以「${ROLE_LABEL[preview.role]}」身份加入这个团队。${ROLE_HINT[preview.role]}。`}>
       {!preview.valid ? (
-        <p role="alert" className="rounded-lg bg-seal/[.07] px-3 py-2 text-[13px] text-seal">
+        <p role="alert" className="rounded-lg bg-seal/[.07] px-3 py-2 text-fs-sm text-seal">
           {preview.reason ?? '这条邀请已失效'}，请向邀请人要一条新的链接。
         </p>
       ) : me ? (
         <div className="flex flex-col gap-3">
-          <p className="text-[13px] text-ink-2">当前登录账号：{me.user.name}（{me.user.phone}）</p>
+          <p className="text-fs-sm text-ink-2">当前登录账号：{me.user.name}（{me.user.phone}）</p>
           {error && (
-            <p role="alert" className="rounded-lg bg-seal/[.07] px-3 py-2 text-[12.5px] text-seal">
+            <p role="alert" className="rounded-lg bg-seal/[.07] px-3 py-2 text-fs-xs text-seal">
               {error}
             </p>
           )}

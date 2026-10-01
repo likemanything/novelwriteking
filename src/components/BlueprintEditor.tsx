@@ -31,7 +31,7 @@ export function BlueprintEditor({ chapter, characters, threads, compact }: { cha
       <div className="space-y-4">
         <div className={cx('grid gap-3', compact ? 'grid-cols-1' : 'grid-cols-[1.4fr_1fr]')}>
           <Field label="章节名">
-            <Input value={d.title} onChange={(e) => set({ title: e.target.value })} className="font-serif text-[15px]" />
+            <Input value={d.title} onChange={(e) => set({ title: e.target.value })} className="font-serif text-fs-md" />
           </Field>
           <Field label="所属卷 / 幕">
             <Input value={d.act} onChange={(e) => set({ act: e.target.value })} placeholder="第一卷 · 起" />
@@ -45,8 +45,8 @@ export function BlueprintEditor({ chapter, characters, threads, compact }: { cha
             <AnimatePresence initial={false}>
               {b.beats.map((x, i) => (
                 <motion.li key={i} layout initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, height: 0 }} className="group flex items-start gap-2 rounded-xl border border-line bg-paper-2/60 py-1 pr-1 pl-2">
-                  <span className="mt-1.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-seal/10 font-serif text-[11px] text-seal">{i + 1}</span>
-                  <Textarea bare minRows={1} value={x} onChange={(e) => setB({ beats: b.beats.map((y, j) => (j === i ? e.target.value : y)) })} className="text-[13.5px] leading-relaxed" aria-label={`情节点 ${i + 1}`} />
+                  <span className="mt-1.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-seal/10 font-serif text-fs-2xs text-seal">{i + 1}</span>
+                  <Textarea bare minRows={1} value={x} onChange={(e) => setB({ beats: b.beats.map((y, j) => (j === i ? e.target.value : y)) })} className="text-fs-sm leading-relaxed" aria-label={`情节点 ${i + 1}`} />
                   <div className="flex shrink-0 opacity-0 transition group-focus-within:opacity-100 group-hover:opacity-100">
                     <IconButton label="上移" size="sm" onClick={() => move(i, -1)} disabled={i === 0}>
                       <ArrowUp className="size-3.5" />
@@ -71,7 +71,7 @@ export function BlueprintEditor({ chapter, characters, threads, compact }: { cha
               setBeat('');
             }}
           >
-            <Input value={beat} onChange={(e) => setBeat(e.target.value)} placeholder="添加一个具体的事件……" className="h-9 text-[13px]" aria-label="新情节点" />
+            <Input value={beat} onChange={(e) => setBeat(e.target.value)} placeholder="添加一个具体的事件……" className="h-9 text-fs-sm" aria-label="新情节点" />
             <IconButton label="添加情节点" type="submit" className="border border-line">
               <Plus className="size-4" />
             </IconButton>
@@ -102,7 +102,7 @@ export function BlueprintEditor({ chapter, characters, threads, compact }: { cha
                 {c.name}
               </Chip>
             ))}
-            {!characters.length && <span className="text-[12px] text-ink-3">设定集里还没有人物</span>}
+            {!characters.length && <span className="text-fs-xs text-ink-3">设定集里还没有人物</span>}
           </div>
         </Field>
         <Field group label="推进的故事线" hint="故事线页面据此绘制">
@@ -112,7 +112,7 @@ export function BlueprintEditor({ chapter, characters, threads, compact }: { cha
                 {t.name}
               </Chip>
             ))}
-            {!threads.length && <span className="text-[12px] text-ink-3">设定集里还没有故事线</span>}
+            {!threads.length && <span className="text-fs-xs text-ink-3">设定集里还没有故事线</span>}
           </div>
         </Field>
         <Field label="作者备注" hint="只给 AI 看的悄悄话">

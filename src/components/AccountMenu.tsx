@@ -17,7 +17,7 @@ export function SyncBadge({ className, label = true }: { className?: string; lab
   const bad = status === 'error';
   const text = offline ? '离线 · 修改会在联网后同步' : bad ? error || '同步出错' : pending > 0 || status === 'syncing' ? '正在同步…' : '已同步到云端';
   return (
-    <span className={cx('inline-flex items-center gap-1.5 text-[11.5px] text-ink-3', className)} title={text} role="status">
+    <span className={cx('inline-flex items-center gap-1.5 text-fs-xs text-ink-3', className)} title={text} role="status">
       {offline ? <CloudOff className="size-3.5 text-gold" /> : <span className={cx('size-1.5 rounded-full', bad ? 'bg-seal' : pending > 0 || status === 'syncing' ? 'animate-[var(--animate-breathe)] bg-gold' : 'bg-jade')} />}
       {label && <span className="hidden md:inline">{text}</span>}
     </span>
@@ -57,7 +57,7 @@ export function AccountMenu() {
       <Menu
         trigger={(p) => (
           <button {...p} className="flex h-8 items-center gap-2 rounded-full border border-line pr-2 pl-1 text-xs text-ink-2 transition hover:border-line-2 hover:text-ink">
-            <span className="flex size-6 items-center justify-center rounded-full bg-seal/10 font-serif text-[12px] text-seal">{me.user.name.slice(0, 1)}</span>
+            <span className="flex size-6 items-center justify-center rounded-full bg-seal/10 font-serif text-fs-xs text-seal">{me.user.name.slice(0, 1)}</span>
             <span className="hidden max-w-28 truncate sm:inline">{org.name}</span>
             <ChevronDown className="size-3.5" />
           </button>
@@ -75,7 +75,7 @@ export function AccountMenu() {
         ]}
       />
       <Modal open={creating} onClose={() => setCreating(false)} title="新建团队" footer={<><Button variant="ghost" onClick={() => setCreating(false)}>取消</Button><Button variant="seal" loading={busy} disabled={!name.trim()} onClick={createTeam}>创建</Button></>}>
-        <p className="mb-3 text-[13px] text-ink-2">团队有独立的作品、成员和模型配置。你会成为所有者，随后可以邀请成员。</p>
+        <p className="mb-3 text-fs-sm text-ink-2">团队有独立的作品、成员和模型配置。你会成为所有者，随后可以邀请成员。</p>
         <Input value={name} onChange={(e) => setName(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && name.trim() && createTeam()} placeholder="例如：雾港写作组" maxLength={40} aria-label="团队名称" autoFocus />
       </Modal>
       <ConfirmDialog

@@ -38,7 +38,7 @@ function StepHeader({ stage }: { stage: Stage }) {
   ];
   const at = items.findIndex((i) => i.id === stage);
   return (
-    <ol className="flex items-center gap-2 text-[12px]" aria-label="开书进度">
+    <ol className="flex items-center gap-2 text-fs-xs" aria-label="开书进度">
       {items.map((it, i) => (
         <li key={it.id} className="flex items-center gap-2">
           <span className={cx('transition-colors duration-500', i === at ? 'text-ink' : i < at ? 'text-seal' : 'text-ink-3')} aria-current={i === at ? 'step' : undefined}>
@@ -89,11 +89,11 @@ export default function Genesis() {
       <AnimatePresence mode="wait">
         {stage === 'config' && (
           <motion.main key="config" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }} className="mx-auto max-w-3xl px-6 pt-10 pb-24">
-            <button onClick={() => navigate('/')} className="mb-8 inline-flex items-center gap-1.5 text-[13px] text-ink-3 transition hover:text-ink">
+            <button onClick={() => navigate('/')} className="mb-8 inline-flex items-center gap-1.5 text-fs-sm text-ink-3 transition hover:text-ink">
               <ArrowLeft className="size-4" /> 书架
             </button>
             <h1 className="font-serif text-[34px] leading-tight font-semibold tracking-wide">从一句灵感开始。</h1>
-            <p className="mt-3 text-[14px] text-ink-2">写下让你心头一动的那句话。模糊没关系，AI 会从中找出最有戏剧张力的问题。</p>
+            <p className="mt-3 text-fs-base text-ink-2">写下让你心头一动的那句话。模糊没关系，AI 会从中找出最有戏剧张力的问题。</p>
 
             <div className="surface mt-8 rounded-[22px] p-2 shadow-[var(--shadow-float)]">
               <textarea
@@ -104,7 +104,7 @@ export default function Genesis() {
                 rows={3}
                 placeholder={placeholderIdea}
                 aria-label="灵感"
-                className="block w-full resize-none bg-transparent px-5 pt-4 pb-3 font-serif text-[21px] leading-relaxed text-ink outline-none placeholder:text-ink-3"
+                className="block w-full resize-none bg-transparent px-5 pt-4 pb-3 font-serif text-fs-xl leading-relaxed text-ink outline-none placeholder:text-ink-3"
               />
             </div>
 
@@ -159,7 +159,7 @@ export default function Genesis() {
 
         {stage === 'weaving' && (
           <motion.main key="weaving" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, scale: 0.98 }} transition={{ duration: 0.6 }} className="flex min-h-[calc(100%-4rem)] flex-col items-center justify-center px-6 pb-16 text-center">
-            <motion.blockquote initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2, duration: 0.8 }} className="max-w-2xl rounded-2xl bg-paper/70 px-6 py-4 font-serif text-[24px] leading-relaxed text-ink backdrop-blur-sm">
+            <motion.blockquote initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2, duration: 0.8 }} className="max-w-2xl rounded-2xl bg-paper/70 px-6 py-4 font-serif text-fs-2xl leading-relaxed text-ink backdrop-blur-sm">
               「{input.seed}」
             </motion.blockquote>
             <div className="mt-10 flex flex-wrap justify-center gap-x-2 gap-y-3" aria-live="polite">
@@ -174,7 +174,7 @@ export default function Genesis() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.4 + i * 0.06 }}
                     className={cx(
-                      'inline-flex h-8 items-center gap-1.5 rounded-full border px-3.5 text-[13px] backdrop-blur-sm transition-all duration-500',
+                      'inline-flex h-8 items-center gap-1.5 rounded-full border px-3.5 text-fs-sm backdrop-blur-sm transition-all duration-500',
                       done ? 'border-seal/30 bg-seal/10 text-seal' : now ? 'border-ink/30 bg-paper-2/80 text-ink' : 'border-line bg-paper/50 text-ink-3',
                     )}
                   >
@@ -184,7 +184,7 @@ export default function Genesis() {
                 );
               })}
             </div>
-            <div className="mt-8 text-[13px] text-ink-3">
+            <div className="mt-8 text-fs-sm text-ink-3">
               <span className="shimmer-text">正在生成：{STEPS[Math.min(STEPS.length - 1, Math.max(0, progress - 1))]}</span>
               <span className="mx-2">·</span>
               <span className="tabular-nums">{(job?.text.length ?? 0).toLocaleString('zh-CN')} 字符</span>
@@ -250,9 +250,9 @@ function Review({ input, result, onChange, onReweave, onBack, onCreated }: { inp
   return (
     <motion.main initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="mx-auto max-w-5xl px-6 pt-10 pb-40">
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-        <div className="text-[11px] tracking-[.3em] text-seal">三 · 确认</div>
+        <div className="text-fs-2xs tracking-[.3em] text-seal">三 · 确认</div>
         <h1 className="mt-2 font-serif text-[32px] font-semibold tracking-wide">AI 生成了以下设定。</h1>
-        <p className="mt-2 text-[14px] text-ink-2">留下喜欢的，去掉不要的。所有内容之后都能在设定集里修改。</p>
+        <p className="mt-2 text-fs-base text-ink-2">留下喜欢的，去掉不要的。所有内容之后都能在设定集里修改。</p>
       </motion.div>
 
       {/* 书名 */}
@@ -270,7 +270,7 @@ function Review({ input, result, onChange, onReweave, onBack, onCreated }: { inp
               aria-pressed={title === t}
             >
               <Cover spec={covers[i]} title={t} width={132} />
-              <div className={cx('mt-3 text-center font-serif text-[14px] transition-colors', title === t ? 'text-seal' : 'text-ink-2')}>{t}</div>
+              <div className={cx('mt-3 text-center font-serif text-fs-base transition-colors', title === t ? 'text-seal' : 'text-ink-2')}>{t}</div>
               {title === t && <motion.span layoutId="title-pick" className="absolute -inset-2.5 -z-10 rounded-xl border-2 border-seal/60" transition={{ type: 'spring', stiffness: 400, damping: 32 }} />}
             </motion.button>
           ))}
@@ -286,10 +286,10 @@ function Review({ input, result, onChange, onReweave, onBack, onCreated }: { inp
       <section className="mt-14 grid gap-8 lg:grid-cols-[1.4fr_1fr]">
         <div className="space-y-5">
           <Field label="一句话故事">
-            <Textarea value={result.logline} onChange={(e) => onChange({ ...result, logline: e.target.value })} className="font-serif text-[17px]" />
+            <Textarea value={result.logline} onChange={(e) => onChange({ ...result, logline: e.target.value })} className="font-serif text-fs-lg" />
           </Field>
           <Field label="故事梗概">
-            <Textarea value={result.premise} onChange={(e) => onChange({ ...result, premise: e.target.value })} minRows={4} className="font-serif text-[15px] leading-8" />
+            <Textarea value={result.premise} onChange={(e) => onChange({ ...result, premise: e.target.value })} minRows={4} className="font-serif text-fs-md leading-8" />
           </Field>
         </div>
         <div className="surface space-y-3 rounded-2xl p-5">
@@ -300,7 +300,7 @@ function Review({ input, result, onChange, onReweave, onBack, onCreated }: { inp
             ))}
           </div>
           <div className="text-xs font-medium tracking-wider text-ink-2">文风</div>
-          <dl className="space-y-1.5 text-[13px]">
+          <dl className="space-y-1.5 text-fs-sm">
             {[
               ['声音', result.style.voice],
               ['视角', result.style.pov],
@@ -316,7 +316,7 @@ function Review({ input, result, onChange, onReweave, onBack, onCreated }: { inp
             )}
           </dl>
           {!!result.style.rules.length && (
-            <ul className="space-y-1 border-t border-line pt-3 text-[12.5px] leading-relaxed text-ink-2">
+            <ul className="space-y-1 border-t border-line pt-3 text-fs-xs leading-relaxed text-ink-2">
               {result.style.rules.map((r) => (
                 <li key={r} className="flex gap-2">
                   <span className="mt-2 size-1 shrink-0 rounded-full bg-seal" />
@@ -340,12 +340,12 @@ function Review({ input, result, onChange, onReweave, onBack, onCreated }: { inp
               <motion.button key={c.name + i} variants={item} onClick={() => toggle('c', i)} aria-pressed={!off} className={cx('surface group relative rounded-2xl p-5 text-left transition-all duration-300 hover:-translate-y-0.5', off && 'opacity-40 grayscale')}>
                 <span className="absolute inset-y-4 left-0 w-[3px] rounded-full" style={{ background: silk(i + 1) }} />
                 <div className="flex items-center gap-2">
-                  <span className={cx('font-serif text-[18px] font-semibold', off && 'line-through')}>{c.name}</span>
+                  <span className={cx('font-serif text-fs-lg font-semibold', off && 'line-through')}>{c.name}</span>
                   <Badge>{c.role}</Badge>
                   <span className="ml-auto text-ink-3 opacity-0 transition group-hover:opacity-100">{off ? <RotateCcw className="size-4" /> : <X className="size-4" />}</span>
                 </div>
-                <p className="mt-2 text-[13px] leading-relaxed text-ink-2">{c.summary}</p>
-                <div className="mt-3 space-y-1 text-[12px] text-ink-3">
+                <p className="mt-2 text-fs-sm leading-relaxed text-ink-2">{c.summary}</p>
+                <div className="mt-3 space-y-1 text-fs-xs text-ink-3">
                   {c.desire && (
                     <div>
                       <span className="text-ink-2">想要</span> {c.desire}
@@ -375,8 +375,8 @@ function Review({ input, result, onChange, onReweave, onBack, onCreated }: { inp
                     {w.category}
                   </Badge>
                   <span className="min-w-0">
-                    <span className={cx('block text-[14px] font-medium', drop.w.has(i) && 'line-through')}>{w.name}</span>
-                    <span className="block text-[12.5px] leading-relaxed text-ink-3">{w.content}</span>
+                    <span className={cx('block text-fs-base font-medium', drop.w.has(i) && 'line-through')}>{w.name}</span>
+                    <span className="block text-fs-xs leading-relaxed text-ink-3">{w.content}</span>
                   </span>
                 </button>
               </motion.li>
@@ -391,10 +391,10 @@ function Review({ input, result, onChange, onReweave, onBack, onCreated }: { inp
                 <button onClick={() => toggle('t', i)} aria-pressed={!drop.t.has(i)} className={cx('flex w-full items-start gap-3 rounded-xl border border-line px-4 py-3 text-left transition hover:bg-paper-2', drop.t.has(i) && 'opacity-40')}>
                   <span className="mt-1.5 h-[3px] w-6 shrink-0 rounded-full" style={{ background: silk(i) }} />
                   <span className="min-w-0">
-                    <span className={cx('block text-[14px] font-medium', drop.t.has(i) && 'line-through')}>
+                    <span className={cx('block text-fs-base font-medium', drop.t.has(i) && 'line-through')}>
                       {t.name} {t.kind === 'main' && <Badge tone="seal">主线</Badge>}
                     </span>
-                    <span className="block text-[12.5px] leading-relaxed text-ink-3">{t.description}</span>
+                    <span className="block text-fs-xs leading-relaxed text-ink-3">{t.description}</span>
                   </span>
                 </button>
               </motion.li>
@@ -405,7 +405,7 @@ function Review({ input, result, onChange, onReweave, onBack, onCreated }: { inp
 
       <motion.div initial={{ y: 80 }} animate={{ y: 0 }} transition={{ delay: 0.5, type: 'spring', stiffness: 260, damping: 30 }} className="fixed inset-x-0 bottom-5 z-30 flex justify-center px-4">
         <div className="flex items-center gap-2 rounded-2xl border border-line bg-paper-2/95 p-2 pl-5 shadow-[var(--shadow-float)] backdrop-blur">
-          <span className="mr-3 hidden text-[12.5px] text-ink-3 sm:inline">
+          <span className="mr-3 hidden text-fs-xs text-ink-3 sm:inline">
             {result.characters.length - drop.c.size} 位人物 · {result.world.length - drop.w.size} 条设定 · {result.threads.length - drop.t.size} 条故事线
           </span>
           <Button variant="ghost" size="sm" onClick={onBack}>

@@ -39,15 +39,15 @@ export default function Landing() {
               <span className="flex size-10 items-center justify-center rounded-2xl bg-seal/10 text-seal">
                 <f.icon className="size-5" strokeWidth={1.8} />
               </span>
-              <h3 className="mt-4 font-serif text-[18px] font-semibold">{f.title}</h3>
-              <p className="mt-2 text-[13.5px] leading-relaxed text-ink-2">{f.text}</p>
+              <h3 className="mt-4 font-serif text-fs-lg font-semibold">{f.title}</h3>
+              <p className="mt-2 text-fs-sm leading-relaxed text-ink-2">{f.text}</p>
             </motion.li>
           ))}
         </ul>
 
         <div className="mt-16 flex flex-col items-center gap-4 text-center">
-          <h2 className="font-serif text-[26px] font-semibold">现在就写下第一句</h2>
-          <p className="max-w-md text-[13.5px] leading-relaxed text-ink-3">登录后，你的作品会保存在云端。目前为邀请制内测，需要邀请码或团队邀请链接注册。</p>
+          <h2 className="font-serif text-fs-2xl font-semibold">现在就写下第一句</h2>
+          <p className="max-w-md text-fs-sm leading-relaxed text-ink-3">登录后，你的作品会保存在云端。目前为邀请制内测，需要邀请码或团队邀请链接注册。</p>
           <Button variant="seal" size="lg" onClick={() => toLogin()} icon={<ArrowRight className="size-4" />}>
             登录 / 注册
           </Button>

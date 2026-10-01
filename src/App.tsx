@@ -62,7 +62,7 @@ function Gate({ children }: { children: ReactNode }) {
   if (status === 'error') {
     return (
       <div className="flex h-full flex-col items-center justify-center gap-4 px-6 text-center">
-        <p className="max-w-sm text-[14px] text-ink-2" role="alert">
+        <p className="max-w-sm text-fs-base text-ink-2" role="alert">
           {error ?? '无法连接服务器'}
         </p>
         <Button variant="ink" onClick={() => window.location.reload()}>
@@ -75,7 +75,7 @@ function Gate({ children }: { children: ReactNode }) {
     return (
       <div className="flex h-full flex-col items-center justify-center gap-3 text-ink-3">
         <InkSpinner className="size-6" />
-        <span className="text-[12.5px]">{status === 'opening' ? '正在同步你的作品…' : '正在登录…'}</span>
+        <span className="text-fs-xs">{status === 'opening' ? '正在同步你的作品…' : '正在登录…'}</span>
       </div>
     );
   }

@@ -13,11 +13,11 @@ import { Badge, Button, ConfirmDialog, Field, IconButton, Input, Modal, Textarea
 const KINDS: MediaKind[] = ['image', 'video', 'tts'];
 
 function Result({ r }: { r: { kind: MediaKind; id: string; ms: number } | { error: string } }) {
-  if ('error' in r) return <p className="mt-2 rounded-lg bg-seal/[.07] px-3 py-2 text-[12px] break-words text-seal" role="alert">{r.error}</p>;
+  if ('error' in r) return <p className="mt-2 rounded-lg bg-seal/[.07] px-3 py-2 text-fs-xs break-words text-seal" role="alert">{r.error}</p>;
   const src = mediaUrl(r.id);
   return (
     <div className="mt-2 rounded-lg bg-jade/10 p-2">
-      <div className="mb-1.5 flex items-center gap-1 text-[12px] text-jade"><Check className="size-3.5" />成功，用时 {(r.ms / 1000).toFixed(1)} 秒</div>
+      <div className="mb-1.5 flex items-center gap-1 text-fs-xs text-jade"><Check className="size-3.5" />成功，用时 {(r.ms / 1000).toFixed(1)} 秒</div>
       {r.kind === 'image' && <img src={src} alt="测试结果" className="max-h-56 rounded-lg" />}
       {r.kind === 'video' && <video src={src} controls className="max-h-56 rounded-lg" />}
       {r.kind === 'tts' && <audio src={src} controls className="w-full" />}
@@ -77,7 +77,7 @@ function Editor({ open, onClose, editing, kind }: { open: boolean; onClose: () =
           <Field label="从预设开始" hint={presets.find((p) => p.id === presetId)?.hint}>
             <div className="flex flex-wrap gap-1.5">
               {presets.map((p) => (
-                <button key={p.id} type="button" onClick={() => pick(p.id)} className={cx('rounded-full border px-3 py-1 text-[12.5px] transition', presetId === p.id ? 'border-seal/50 bg-seal/[.07] text-seal' : 'border-line text-ink-2 hover:border-line-2')}>
+                <button key={p.id} type="button" onClick={() => pick(p.id)} className={cx('rounded-full border px-3 py-1 text-fs-xs transition', presetId === p.id ? 'border-seal/50 bg-seal/[.07] text-seal' : 'border-line text-ink-2 hover:border-line-2')}>
                   {p.label}
                 </button>
               ))}
@@ -87,19 +87,19 @@ function Editor({ open, onClose, editing, kind }: { open: boolean; onClose: () =
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="名称"><Input value={name} onChange={(e) => setName(e.target.value)} maxLength={40} /></Field>
           <Field label="API Key" hint={editing ? `已加密保存${editing.keyHint ? `（${editing.keyHint}）` : ''}；留空表示不修改` : undefined}>
-            <Input type="password" value={apiKey} onChange={(e) => setApiKey(e.target.value.trim())} autoComplete="off" placeholder="sk-…" className="font-mono text-[12.5px]" />
+            <Input type="password" value={apiKey} onChange={(e) => setApiKey(e.target.value.trim())} autoComplete="off" placeholder="sk-…" className="font-mono text-fs-xs" />
           </Field>
         </div>
         {needSecret && (
           <Field label="签名密钥 / Secret Key" hint={editing?.hasSecret ? '已保存；留空表示不修改' : 'JWT 或 Basic 认证需要'}>
-            <Input type="password" value={secret} onChange={(e) => setSecret(e.target.value.trim())} autoComplete="off" className="font-mono text-[12.5px]" />
+            <Input type="password" value={secret} onChange={(e) => setSecret(e.target.value.trim())} autoComplete="off" className="font-mono text-fs-xs" />
           </Field>
         )}
         <Field label="适配声明（JSON）" hint="描述怎么调用这家服务：认证、提交、轮询、结果在响应的哪里。变量见下方说明。">
-          <Textarea value={spec} onChange={(e) => setSpec(e.target.value)} minRows={14} className="font-mono text-[12px] leading-relaxed" spellCheck={false} />
-          {!parsed.ok && <p className="mt-1 text-[12px] text-seal">JSON 有误：{parsed.error}</p>}
+          <Textarea value={spec} onChange={(e) => setSpec(e.target.value)} minRows={14} className="font-mono text-fs-xs leading-relaxed" spellCheck={false} />
+          {!parsed.ok && <p className="mt-1 text-fs-xs text-seal">JSON 有误：{parsed.error}</p>}
         </Field>
-        <p className="rounded-lg bg-ink/[.04] px-3 py-2 text-[11.5px] leading-relaxed text-ink-3">
+        <p className="rounded-lg bg-ink/[.04] px-3 py-2 text-fs-xs leading-relaxed text-ink-3">
           请求模板可用变量：<code>{'{{prompt}} {{negative}} {{model}} {{ratio}} {{size}} {{duration}} {{seed}} {{first_frame}} {{last_frame}} {{text}} {{voice}} {{emotion}} {{task_id}}'}</code>。整串恰好是一个变量时保持原类型，缺失的字段会被省略；响应取值用路径，如 <code>data[0].url</code>。认证支持 bearer / header / query / basic / jwt-hs256。
         </p>
       </div>
@@ -134,13 +134,13 @@ function KindSection({ kind, canEdit }: { kind: MediaKind; canEdit: boolean }) {
     <div className="surface rounded-2xl p-5">
       <div className="flex items-center gap-3">
         <div className="min-w-0 flex-1">
-          <h3 className="font-serif text-[17px] font-semibold">{KIND_LABEL[kind].label}模型</h3>
-          <p className="text-[12px] text-ink-3">{KIND_LABEL[kind].hint}</p>
+          <h3 className="font-serif text-fs-lg font-semibold">{KIND_LABEL[kind].label}模型</h3>
+          <p className="text-fs-xs text-ink-3">{KIND_LABEL[kind].hint}</p>
         </div>
         {canEdit && <Button size="sm" variant="outline" icon={<Plus className="size-3.5" />} onClick={() => setAdding(true)}>接入</Button>}
       </div>
       {providers.length === 0 ? (
-        <p className="mt-4 text-[12.5px] text-ink-3">还没有接入。{canEdit ? '点「接入」选预设或空白模板。' : '请联系管理员接入。'}</p>
+        <p className="mt-4 text-fs-xs text-ink-3">还没有接入。{canEdit ? '点「接入」选预设或空白模板。' : '请联系管理员接入。'}</p>
       ) : (
         <ul className="mt-4 space-y-3">
           {providers.map((p) => (
@@ -158,7 +158,7 @@ function KindSection({ kind, canEdit }: { kind: MediaKind; canEdit: boolean }) {
                 </button>
                 <span className="font-medium">{p.name}</span>
                 {assigned === p.id && <Badge tone="seal">使用中</Badge>}
-                <span className="min-w-0 flex-1 truncate font-mono text-[11.5px] text-ink-3" title={p.spec.baseUrl}>{p.spec.baseUrl}{p.keyHint ? ` · Key ${p.keyHint}` : ''}</span>
+                <span className="min-w-0 flex-1 truncate font-mono text-fs-xs text-ink-3" title={p.spec.baseUrl}>{p.spec.baseUrl}{p.keyHint ? ` · Key ${p.keyHint}` : ''}</span>
                 {canEdit && (
                   <>
                     <Button size="xs" variant="outline" icon={<Play className="size-3" />} loading={testing === p.id} onClick={() => test(p)}>试一条</Button>
@@ -167,7 +167,7 @@ function KindSection({ kind, canEdit }: { kind: MediaKind; canEdit: boolean }) {
                   </>
                 )}
               </div>
-              {testing === p.id && <p className="mt-2 text-[12px] text-ink-3">正在真实调用一次，视频可能需要几分钟……</p>}
+              {testing === p.id && <p className="mt-2 text-fs-xs text-ink-3">正在真实调用一次，视频可能需要几分钟……</p>}
               {results[p.id] && testing !== p.id && <Result r={results[p.id]} />}
             </li>
           ))}
@@ -202,7 +202,7 @@ export function MediaProviders({ canEdit }: { canEdit: boolean }) {
       {KINDS.map((k) => (
         <KindSection key={k} kind={k} canEdit={canEdit} />
       ))}
-      <p className="text-[11.5px] text-ink-3">生成的图片、视频和音频保存在服务器本地磁盘，只有团队成员能访问。</p>
+      <p className="text-fs-xs text-ink-3">生成的图片、视频和音频保存在服务器本地磁盘，只有团队成员能访问。</p>
     </div>
   );
 }

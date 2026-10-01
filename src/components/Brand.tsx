@@ -16,8 +16,8 @@ export function BrandMark({ className }: { className?: string }) {
         <Seal size={30} />
       </span>
       <span className="leading-none">
-        <span className="block font-serif text-[17px] font-semibold tracking-[.2em]">墨织</span>
-        <span className="mt-0.5 block text-[9px] tracking-[.32em] text-ink-3 uppercase">Inkloom</span>
+        <span className="block font-serif text-fs-lg font-semibold tracking-[.2em]">墨织</span>
+        <span className="mt-0.5 block text-fs-2xs tracking-[.32em] text-ink-3 uppercase">Inkloom</span>
       </span>
     </Link>
   );

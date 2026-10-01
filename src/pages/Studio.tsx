@@ -161,7 +161,7 @@ function ChapterRail({ project, chapters, current }: { project: Project; chapter
   return (
     <div className="flex h-full w-[236px] flex-col">
       <div className="flex h-16 items-center justify-between px-4">
-        <span className="text-[11px] tracking-[.25em] text-ink-3">目录</span>
+        <span className="text-fs-2xs tracking-[.25em] text-ink-3">目录</span>
         <IconButton label="新建章节" size="sm" onClick={() => createBlankChapter(project.id).then((c) => navigate(`/p/${project.id}/write/${c.id}`))}>
           <Plus className="size-4" />
         </IconButton>
@@ -172,15 +172,15 @@ function ChapterRail({ project, chapters, current }: { project: Project; chapter
           const on = c.id === current;
           return (
             <div key={c.id}>
-              {showAct && <div className="px-3 pt-4 pb-1.5 font-serif text-[11px] tracking-[.15em] text-seal">{c.act}</div>}
+              {showAct && <div className="px-3 pt-4 pb-1.5 font-serif text-fs-2xs tracking-[.15em] text-seal">{c.act}</div>}
               <button
                 onClick={() => navigate(`/p/${project.id}/write/${c.id}`)}
                 aria-current={on ? 'page' : undefined}
                 className={cx('relative flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left transition-colors', on ? 'text-ink' : 'text-ink-2 hover:bg-ink/[.04] hover:text-ink')}
               >
                 {on && <motion.span layoutId="rail-active" className="absolute inset-0 rounded-lg bg-paper-2 shadow-[var(--shadow-card)] ring-1 ring-line" transition={{ type: 'spring', stiffness: 500, damping: 40 }} />}
-                <span className="relative w-7 shrink-0 font-serif text-[12px] text-ink-3">{chineseNumber(c.index)}</span>
-                <span className="relative min-w-0 flex-1 truncate text-[13px]">{c.title}</span>
+                <span className="relative w-7 shrink-0 font-serif text-fs-xs text-ink-3">{chineseNumber(c.index)}</span>
+                <span className="relative min-w-0 flex-1 truncate text-fs-sm">{c.title}</span>
                 <span className="relative size-1.5 shrink-0 rounded-full" style={{ background: STATUS_COLOR[c.status] }} aria-hidden="true" />
                 <span className="sr-only">（{STATUS_META[c.status].label}）</span>
               </button>
@@ -472,18 +472,18 @@ function Desk({ project, chapter, characters, threads, railOpen, onToggleRail, i
     <div className="flex min-w-0 flex-1">
       <div className="relative flex min-w-0 flex-1 flex-col">
         {/* 顶栏 */}
-        <motion.header initial={false} animate={{ opacity: focus ? 0.0 : 1, height: focus ? 0 : 64 }} className="@container flex shrink-0 items-center gap-3 overflow-hidden border-b border-line px-4">
+        <motion.header initial={false} animate={{ opacity: focus ? 0.0 : 1, height: focus ? 0 : 64 }} className="glass @container flex shrink-0 items-center gap-3 overflow-hidden border-x-0 border-t-0 px-4">
           <IconButton label={railOpen ? '收起目录' : '展开目录'} onClick={onToggleRail} active={railOpen}>
             <PanelLeft className="size-[18px]" />
           </IconButton>
           <div className="flex min-w-0 flex-1 items-center gap-2 overflow-hidden @5xl:flex-none">
-            <span className="shrink-0 font-serif text-[13px] text-seal">第{chineseNumber(chapter.index)}章</span>
+            <span className="shrink-0 font-serif text-fs-sm text-seal">第{chineseNumber(chapter.index)}章</span>
             <input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               onBlur={() => title.trim() && title !== chapter.title && db.chapters.update(chapter.id, { title: title.trim() })}
               onKeyDown={(e) => e.key === 'Enter' && (e.target as HTMLInputElement).blur()}
-              className="field-bare h-9 max-w-[14em] min-w-[3em] shrink px-2 font-serif text-[18px] font-semibold"
+              className="field-bare h-9 max-w-[14em] min-w-[3em] shrink px-2 font-serif text-fs-lg font-semibold"
               style={{ width: `${Math.max(3, [...title].length + 1.5)}em` }}
               aria-label="章节名"
             />
@@ -492,7 +492,7 @@ function Desk({ project, chapter, characters, threads, railOpen, onToggleRail, i
                 <Seal chars="定稿" size={28} />
               </motion.span>
             )}
-            <button onClick={() => onStep(chapter.status)} className="hidden shrink-0 items-center gap-1.5 rounded-full border border-line px-2.5 py-0.5 text-[11.5px] text-ink-2 @2xl:flex @5xl:hidden" title="查看进度">
+            <button onClick={() => onStep(chapter.status)} className="hidden shrink-0 items-center gap-1.5 rounded-full border border-line px-2.5 py-0.5 text-fs-xs text-ink-2 @2xl:flex @5xl:hidden" title="查看进度">
               <span className="size-1.5 rounded-full" style={{ background: STATUS_COLOR[chapter.status] }} />
               {STATUS_META[chapter.status].step + 1}/5 · {STATUS_META[chapter.status].label}
             </button>
@@ -545,10 +545,10 @@ function Desk({ project, chapter, characters, threads, railOpen, onToggleRail, i
             {!hasText && !streaming && !readOnly && version !== undefined && (
               <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 8, transition: { duration: 0.2 } }} transition={{ delay: 0.15, duration: 0.6, ease: [0.22, 1, 0.36, 1] }} className="pointer-events-none absolute inset-x-0 top-[26%] flex justify-center px-6">
                 <div className="pointer-events-auto w-full max-w-lg rounded-3xl border border-line bg-paper-2/90 p-6 shadow-[var(--shadow-float)] backdrop-blur">
-                  <div className="text-[11px] tracking-[.25em] text-seal">第{chineseNumber(chapter.index)}章 · 未动笔</div>
-                  <div className="mt-2 font-serif text-[20px] font-semibold">{chapter.blueprint.goal || '这一章还没有写本章目标'}</div>
+                  <div className="text-fs-2xs tracking-[.25em] text-seal">第{chineseNumber(chapter.index)}章 · 未动笔</div>
+                  <div className="mt-2 font-serif text-fs-xl font-semibold">{chapter.blueprint.goal || '这一章还没有写本章目标'}</div>
                   {!!chapter.blueprint.beats.length && (
-                    <ol className="mt-3 space-y-1 text-[13px] text-ink-2">
+                    <ol className="mt-3 space-y-1 text-fs-sm text-ink-2">
                       {chapter.blueprint.beats.map((b, i) => (
                         <li key={i} className="flex gap-2">
                           <span className="font-serif text-seal">{i + 1}</span>
@@ -564,7 +564,7 @@ function Desk({ project, chapter, characters, threads, railOpen, onToggleRail, i
                     <Button variant="ghost" onClick={() => editor.current?.focus()}>
                       我自己写
                     </Button>
-                    <span className="ml-auto text-[11px] text-ink-3">由 {writeProfile.name} 写作</span>
+                    <span className="ml-auto text-fs-2xs text-ink-3">由 {writeProfile.name} 写作</span>
                   </div>
                 </div>
               </motion.div>
@@ -573,7 +573,7 @@ function Desk({ project, chapter, characters, threads, railOpen, onToggleRail, i
 
           <AnimatePresence>
             {streaming && (
-              <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="absolute top-4 left-1/2 z-10 flex -translate-x-1/2 items-center gap-3 rounded-full border border-line bg-paper-2/95 py-1.5 pr-1.5 pl-4 text-[12.5px] shadow-[var(--shadow-float)] backdrop-blur">
+              <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="absolute top-4 left-1/2 z-10 flex -translate-x-1/2 items-center gap-3 rounded-full border border-line bg-paper-2/95 py-1.5 pr-1.5 pl-4 text-fs-xs shadow-[var(--shadow-float)] backdrop-blur">
                 <span className="size-1.5 animate-[breathe_1.2s_ease-in-out_infinite] rounded-full bg-seal" />
                 <span className="shimmer-text">{writeJob?.label}</span>
                 <span className="text-ink-3 tabular-nums">{words.toLocaleString('zh-CN')} 字</span>
@@ -585,7 +585,7 @@ function Desk({ project, chapter, characters, threads, railOpen, onToggleRail, i
           </AnimatePresence>
 
           {readOnly && !focus && (
-            <div className="absolute bottom-4 left-1/2 z-10 flex -translate-x-1/2 items-center gap-3 rounded-full border border-line bg-paper-2/95 py-1.5 pr-1.5 pl-4 text-[12.5px] text-ink-2 shadow-[var(--shadow-card)] backdrop-blur" role="status">
+            <div className="absolute bottom-4 left-1/2 z-10 flex -translate-x-1/2 items-center gap-3 rounded-full border border-line bg-paper-2/95 py-1.5 pr-1.5 pl-4 text-fs-xs text-ink-2 shadow-[var(--shadow-card)] backdrop-blur" role="status">
               {finalized ? (
                 <>
                   {caps.finalize ? '已定稿，修改前需要先解除定稿' : '已定稿，需要编辑解除定稿后才能修改'}
@@ -604,7 +604,7 @@ function Desk({ project, chapter, characters, threads, railOpen, onToggleRail, i
           )}
 
           {focus && (
-            <button onClick={() => setFocus(false)} className="absolute top-4 right-4 z-10 flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[12px] text-ink-3 opacity-40 transition hover:bg-ink/[.05] hover:opacity-100">
+            <button onClick={() => setFocus(false)} className="absolute top-4 right-4 z-10 flex items-center gap-1.5 rounded-full px-3 py-1.5 text-fs-xs text-ink-3 opacity-40 transition hover:bg-ink/[.05] hover:opacity-100">
               <Minimize2 className="size-3.5" /> 退出专注 <Kbd>Esc</Kbd>
             </button>
           )}
@@ -613,7 +613,7 @@ function Desk({ project, chapter, characters, threads, railOpen, onToggleRail, i
         </div>
 
         {/* 状态栏 */}
-        <motion.footer initial={false} animate={{ opacity: focus ? 0.35 : 1 }} className="flex h-10 shrink-0 items-center gap-4 border-t border-line px-4 text-[12px] text-ink-3">
+        <motion.footer initial={false} animate={{ opacity: focus ? 0.35 : 1 }} className="glass @container flex h-10 shrink-0 items-center gap-4 overflow-hidden border-x-0 border-b-0 px-4 text-fs-xs whitespace-nowrap text-ink-3 [&>*]:shrink-0">
           <span className="flex items-center gap-2">
             <ProgressRing value={words / Math.max(1, project.targetWords)} size={18} stroke={2.5} />
             <span className="tabular-nums">
@@ -633,7 +633,7 @@ function Desk({ project, chapter, characters, threads, railOpen, onToggleRail, i
             <span className={cx('size-1.5 rounded-full', saveState === 'saved' ? 'bg-jade' : saveState === 'saving' ? 'animate-pulse bg-gold' : 'bg-ink-3')} />
             {streaming ? '生成中' : saveState === 'saved' ? '已保存到本地' : saveState === 'saving' ? '保存中…' : '未保存'}
           </span>
-          <span className="hidden md:inline">写作模型 · {writeProfile.name}</span>
+          <span className="hidden @2xl:inline">写作模型 · {writeProfile.name}</span>
           {lint && lint.chars >= 600 && (
             <span className="relative">
               <button
@@ -646,7 +646,7 @@ function Desk({ project, chapter, characters, threads, railOpen, onToggleRail, i
                 {lint.level === 'high' ? 'AI 腔偏高' : '文字体检'}
               </button>
               {lintOpen && (
-                <div className="surface absolute bottom-full left-0 z-30 mb-2 w-80 rounded-xl p-3 text-[12px] leading-relaxed text-ink-2 shadow-[var(--shadow-float)]" role="dialog" aria-label="文字体检">
+                <div className="surface absolute bottom-full left-0 z-30 mb-2 w-80 rounded-xl p-3 text-fs-xs leading-relaxed text-ink-2 shadow-[var(--shadow-float)]" role="dialog" aria-label="文字体检">
                   <div className="mb-1 font-medium text-ink">{lint.summary}</div>
                   <ul className="space-y-0.5 text-ink-3">
                     <li>比喻：每千字 {lint.similePerK.toFixed(1)} 处（共 {lint.simileCount}）</li>
@@ -696,7 +696,7 @@ function Desk({ project, chapter, characters, threads, railOpen, onToggleRail, i
       {/* 检查器 */}
       <AnimatePresence initial={false}>
         {inspectorOpen && (
-          <motion.aside initial={{ width: 0, opacity: 0 }} animate={{ width: 384, opacity: 1 }} exit={{ width: 0, opacity: 0 }} transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }} className="shrink-0 overflow-hidden border-l border-line bg-paper-2/60" aria-label="侧栏">
+          <motion.aside initial={{ width: 0, opacity: 0 }} animate={{ width: 384, opacity: 1 }} exit={{ width: 0, opacity: 0 }} transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }} className="glass shrink-0 overflow-hidden border-y-0 border-r-0" aria-label="侧栏">
             <div className="flex h-full w-[384px] flex-col">
               <Tabs
                 className="shrink-0 px-3 pt-3"

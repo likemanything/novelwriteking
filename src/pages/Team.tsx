@@ -37,7 +37,7 @@ function useReload<T>(load: () => Promise<T>, deps: unknown[]) {
 
 function Select<T extends string>({ value, onChange, options, disabled, label }: { value: T; onChange: (v: T) => void; options: { value: T; label: string }[]; disabled?: boolean; label: string }) {
   return (
-    <select aria-label={label} value={value} disabled={disabled} onChange={(e) => onChange(e.target.value as T)} className="field h-8 cursor-pointer appearance-none px-2.5 pr-7 text-[12.5px] disabled:cursor-default disabled:opacity-70">
+    <select aria-label={label} value={value} disabled={disabled} onChange={(e) => onChange(e.target.value as T)} className="field h-8 cursor-pointer appearance-none px-2.5 pr-7 text-fs-xs disabled:cursor-default disabled:opacity-70">
       {options.map((o) => (
         <option key={o.value} value={o.value}>
           {o.label}
@@ -67,21 +67,21 @@ function Members({ orgId, canManage, isOwner, kind }: { orgId: string; canManage
   if (!data) return null;
   return (
     <section className="mt-12">
-      <h2 className="font-serif text-[20px] font-semibold">成员 <span className="text-ink-3 tabular-nums">{data.members.length}</span></h2>
-      <p className="mb-4 text-[12.5px] text-ink-3">{kind === 'personal' ? '这是你的个人空间。新建一个团队后，就可以邀请别人一起写。' : '管理员负责成员与模型；编辑负责设定与定稿；作者专注写章节。'}</p>
+      <h2 className="font-serif text-fs-xl font-semibold">成员 <span className="text-ink-3 tabular-nums">{data.members.length}</span></h2>
+      <p className="mb-4 text-fs-xs text-ink-3">{kind === 'personal' ? '这是你的个人空间。新建一个团队后，就可以邀请别人一起写。' : '管理员负责成员与模型；编辑负责设定与定稿；作者专注写章节。'}</p>
       <ul className="surface divide-y divide-line rounded-2xl">
         {data.members.map((m) => {
           const self = m.userId === me;
           const locked = !canManage || self || m.role === 'owner' || (m.role === 'admin' && !isOwner);
           return (
             <li key={m.userId} className="flex flex-wrap items-center gap-3 px-5 py-3">
-              <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-seal/10 font-serif text-[13px] text-seal">{m.name.slice(0, 1)}</span>
+              <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-seal/10 font-serif text-fs-sm text-seal">{m.name.slice(0, 1)}</span>
               <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2 text-[14px] font-medium">
+                <div className="flex items-center gap-2 text-fs-base font-medium">
                   <span className="truncate">{m.name}</span>
                   {self && <Badge>我</Badge>}
                 </div>
-                <div className="text-[11.5px] text-ink-3">
+                <div className="text-fs-xs text-ink-3">
                   {m.phone && `${m.phone} · `}加入于 {relativeTime(new Date(m.joinedAt).getTime())} · 本月 {formatNumber(m.monthTokens)} tokens
                   {m.role === 'guest' && m.grants.length > 0 && ` · 可访问 ${m.grants.length} 部作品`}
                 </div>
@@ -171,12 +171,12 @@ function GrantsModal({ member, orgId, projects, onClose }: { member: MemberInfo 
   };
   return (
     <Modal open={!!member} onClose={() => onClose(false)} title={`${member?.name ?? ''} 的作品授权`} footer={<><Button variant="ghost" onClick={() => onClose(false)}>取消</Button><Button variant="ink" onClick={save}>保存</Button></>}>
-      <p className="mb-3 text-[12.5px] text-ink-3">外部协作者只能看到下面被授权的作品。</p>
-      {projects.length === 0 && <p className="text-[13px] text-ink-3">这个团队还没有作品。</p>}
+      <p className="mb-3 text-fs-xs text-ink-3">外部协作者只能看到下面被授权的作品。</p>
+      {projects.length === 0 && <p className="text-fs-sm text-ink-3">这个团队还没有作品。</p>}
       <ul className="space-y-2">
         {projects.map((p) => (
           <li key={p.id} className="flex items-center gap-3">
-            <span className="min-w-0 flex-1 truncate text-[13.5px]">{p.title}</span>
+            <span className="min-w-0 flex-1 truncate text-fs-sm">{p.title}</span>
             <Select label={`${p.title}的权限`} value={(grants[p.id] ?? '') as ProjectRole | ''} onChange={(v) => setGrants({ ...grants, [p.id]: v })} options={[{ value: '' as const, label: '无权限' }, ...PROJECT_ROLES]} />
           </li>
         ))}
@@ -224,8 +224,8 @@ function Invitations({ orgId, isOwner, kind }: { orgId: string; isOwner: boolean
     <section className="mt-12">
       <div className="mb-4 flex items-end justify-between gap-3">
         <div>
-          <h2 className="font-serif text-[20px] font-semibold">邀请链接</h2>
-          <p className="text-[12.5px] text-ink-3">生成一条链接发给对方，对方用手机号登录后自动加入，无需内测邀请码。</p>
+          <h2 className="font-serif text-fs-xl font-semibold">邀请链接</h2>
+          <p className="text-fs-xs text-ink-3">生成一条链接发给对方，对方用手机号登录后自动加入，无需内测邀请码。</p>
         </div>
         <Button variant="ink" size="sm" icon={<Plus className="size-4" />} onClick={() => setOpen(true)} disabled={kind === 'personal'} title={kind === 'personal' ? '个人空间不能邀请成员，请先新建团队' : undefined}>
           新建邀请
@@ -236,10 +236,10 @@ function Invitations({ orgId, isOwner, kind }: { orgId: string; isOwner: boolean
       ) : (
         <ul className="surface divide-y divide-line rounded-2xl">
           {active.map((i) => (
-            <li key={i.id} className="flex flex-wrap items-center gap-3 px-5 py-3 text-[13px]">
+            <li key={i.id} className="flex flex-wrap items-center gap-3 px-5 py-3 text-fs-sm">
               <Badge tone="indigo">{ROLE_LABEL[i.role]}</Badge>
               <span className="min-w-0 flex-1 truncate text-ink-2">{i.note || '未备注'}</span>
-              <span className="text-[12px] text-ink-3">
+              <span className="text-fs-xs text-ink-3">
                 已用 {i.usedCount}/{i.maxUses} · {new Date(i.expiresAt).toLocaleDateString()} 到期 · {i.createdByName}
               </span>
               <IconButton
@@ -260,14 +260,14 @@ function Invitations({ orgId, isOwner, kind }: { orgId: string; isOwner: boolean
           ))}
         </ul>
       )}
-      <p className="mt-2 text-[11.5px] text-ink-3">出于安全，链接只在生成时显示一次；忘记复制就撤销后重新生成。</p>
+      <p className="mt-2 text-fs-xs text-ink-3">出于安全，链接只在生成时显示一次；忘记复制就撤销后重新生成。</p>
 
       <Modal open={open} onClose={close} title="新建邀请" footer={created ? <Button variant="ink" onClick={close}>完成</Button> : <><Button variant="ghost" onClick={close}>取消</Button><Button variant="seal" onClick={create} loading={busy} disabled={role === 'guest' && picked.length === 0}>生成链接</Button></>}>
         {created ? (
           <div>
-            <p className="mb-2 text-[13px] text-ink-2">把这条链接发给对方：</p>
+            <p className="mb-2 text-fs-sm text-ink-2">把这条链接发给对方：</p>
             <div className="flex gap-2">
-              <Input readOnly value={created} onFocus={(e) => e.currentTarget.select()} className="font-mono text-[12px]" />
+              <Input readOnly value={created} onFocus={(e) => e.currentTarget.select()} className="font-mono text-fs-xs" />
               <Button variant="outline" icon={<Copy className="size-4" />} onClick={() => copy(created)}>
                 复制
               </Button>
@@ -282,7 +282,7 @@ function Invitations({ orgId, isOwner, kind }: { orgId: string; isOwner: boolean
               <Field label="可访问的作品">
                 <div className="space-y-1.5">
                   {(projects ?? []).map((p) => (
-                    <label key={p.id} className="flex items-center gap-2 text-[13px]">
+                    <label key={p.id} className="flex items-center gap-2 text-fs-sm">
                       <input type="checkbox" checked={picked.includes(p.id)} onChange={(e) => setPicked(e.target.checked ? [...picked, p.id] : picked.filter((x) => x !== p.id))} className="accent-[var(--seal)]" />
                       {p.title}
                     </label>
@@ -338,15 +338,15 @@ function Usage({ orgId, canManage }: { orgId: string; canManage: boolean }) {
   const pct = usage.limit ? Math.min(100, (usage.totalTokens / usage.limit) * 100) : null;
   return (
     <section className="mt-12">
-      <h2 className="font-serif text-[20px] font-semibold">AI 用量 <span className="text-[13px] font-normal text-ink-3">{usage.month}</span></h2>
-      <p className="mb-4 text-[12.5px] text-ink-3">{canManage ? '全团队本月的模型调用，按成员与环节统计。' : '你本月的模型调用。'}</p>
+      <h2 className="font-serif text-fs-xl font-semibold">AI 用量 <span className="text-fs-sm font-normal text-ink-3">{usage.month}</span></h2>
+      <p className="mb-4 text-fs-xs text-ink-3">{canManage ? '全团队本月的模型调用，按成员与环节统计。' : '你本月的模型调用。'}</p>
       <div className="surface rounded-2xl p-5">
         <div className="flex flex-wrap items-baseline gap-x-6 gap-y-1">
           <div>
-            <span className="font-serif text-[28px] font-semibold tabular-nums">{formatNumber(usage.totalTokens)}</span>
-            <span className="ml-1.5 text-[12.5px] text-ink-3">tokens{usage.limit ? ` / ${formatNumber(usage.limit)}` : '（团队未设上限）'}</span>
+            <span className="font-serif text-fs-2xl font-semibold tabular-nums">{formatNumber(usage.totalTokens)}</span>
+            <span className="ml-1.5 text-fs-xs text-ink-3">tokens{usage.limit ? ` / ${formatNumber(usage.limit)}` : '（团队未设上限）'}</span>
           </div>
-          {usage.memberLimit !== null && <span className="text-[12.5px] text-ink-3">每人每月上限 {formatNumber(usage.memberLimit)}</span>}
+          {usage.memberLimit !== null && <span className="text-fs-xs text-ink-3">每人每月上限 {formatNumber(usage.memberLimit)}</span>}
         </div>
         {pct !== null && (
           <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-line" role="progressbar" aria-valuenow={Math.round(pct)} aria-valuemin={0} aria-valuemax={100}>
@@ -355,7 +355,7 @@ function Usage({ orgId, canManage }: { orgId: string; canManage: boolean }) {
         )}
         {usage.rows.length > 0 ? (
           <div className="mt-5 overflow-x-auto">
-            <table className="w-full text-left text-[12.5px]">
+            <table className="w-full text-left text-fs-xs">
               <thead className="text-ink-3">
                 <tr>
                   <th className="py-1.5 font-medium">成员</th>
@@ -372,7 +372,7 @@ function Usage({ orgId, canManage }: { orgId: string; canManage: boolean }) {
                   <tr key={i}>
                     <td className="py-1.5">{r.userName}</td>
                     <td className="py-1.5">{STAGE_NAME[r.stage] ?? r.stage}</td>
-                    <td className="py-1.5 font-mono text-[11.5px] text-ink-3">{r.model}</td>
+                    <td className="py-1.5 font-mono text-fs-xs text-ink-3">{r.model}</td>
                     <td className="py-1.5 text-right">{r.calls}</td>
                     <td className="py-1.5 text-right">{formatNumber(r.inputTokens)}</td>
                     <td className="py-1.5 text-right">{formatNumber(r.outputTokens)}</td>
@@ -383,7 +383,7 @@ function Usage({ orgId, canManage }: { orgId: string; canManage: boolean }) {
             </table>
           </div>
         ) : (
-          <p className="mt-4 text-[12.5px] text-ink-3">本月还没有调用真实模型（离线演示引擎不计入用量）。</p>
+          <p className="mt-4 text-fs-xs text-ink-3">本月还没有调用真实模型（离线演示引擎不计入用量）。</p>
         )}
         {canManage && (
           <div className="mt-5 grid gap-4 border-t border-line pt-5 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
@@ -421,8 +421,8 @@ function SignupCodes() {
   if (!data) return null;
   return (
     <section className="mt-12">
-      <h2 className="font-serif text-[20px] font-semibold">内测邀请码 <Badge tone="gold">平台管理员</Badge></h2>
-      <p className="mb-4 text-[12.5px] text-ink-3">邀请制下，新用户用邀请码注册，并自动获得一个个人空间。</p>
+      <h2 className="font-serif text-fs-xl font-semibold">内测邀请码 <Badge tone="gold">平台管理员</Badge></h2>
+      <p className="mb-4 text-fs-xs text-ink-3">邀请制下，新用户用邀请码注册，并自动获得一个个人空间。</p>
       <div className="surface rounded-2xl p-5">
         <div className="flex flex-wrap items-end gap-3">
           <Field label="备注" className="min-w-48 flex-1">
@@ -436,14 +436,14 @@ function SignupCodes() {
           </Button>
         </div>
         {data.codes.length > 0 && (
-          <ul className="mt-4 divide-y divide-line text-[13px]">
+          <ul className="mt-4 divide-y divide-line text-fs-sm">
             {data.codes.map((c) => (
               <li key={c.code} className="flex flex-wrap items-center gap-3 py-2">
                 <button className="font-mono font-semibold hover:text-seal" onClick={() => navigator.clipboard?.writeText(c.code).then(() => toast('已复制', { tone: 'success' }))} title="点击复制">
                   {c.code}
                 </button>
                 <span className="min-w-0 flex-1 truncate text-ink-3">{c.note}</span>
-                <span className="text-[12px] text-ink-3">
+                <span className="text-fs-xs text-ink-3">
                   {c.usedCount}/{c.maxUses}
                   {c.expiresAt ? ` · ${new Date(c.expiresAt).toLocaleDateString()} 到期` : ''}
                 </span>
@@ -477,7 +477,7 @@ function Danger({ orgId, orgName, kind, isOwner, userId }: { orgId: string; orgN
   if (kind === 'personal') return null;
   return (
     <section className="mt-12">
-      <h2 className="mb-4 font-serif text-[20px] font-semibold">离开或删除团队</h2>
+      <h2 className="mb-4 font-serif text-fs-xl font-semibold">离开或删除团队</h2>
       <div className="surface flex flex-wrap items-center gap-3 rounded-2xl p-5">
         {!isOwner && (
           <Button variant="outline" onClick={() => setLeave(true)}>
@@ -486,7 +486,7 @@ function Danger({ orgId, orgName, kind, isOwner, userId }: { orgId: string; orgN
         )}
         {isOwner && (
           <>
-            <p className="min-w-0 flex-1 text-[12.5px] text-ink-3">所有者不能直接退出，请先转让所有权。删除团队会永久删除其中全部作品、成员与模型配置。</p>
+            <p className="min-w-0 flex-1 text-fs-xs text-ink-3">所有者不能直接退出，请先转让所有权。删除团队会永久删除其中全部作品、成员与模型配置。</p>
             <Button variant="outline" className="text-seal" onClick={() => setDel(true)}>
               删除团队…
             </Button>
@@ -520,7 +520,7 @@ function Danger({ orgId, orgName, kind, isOwner, userId }: { orgId: string; orgN
           toastError(e, '删除失败');
         }
       }}>永久删除</Button></>}>
-        <p className="mb-3 text-[13px] leading-relaxed text-ink-2">此操作无法撤销。请输入团队名称 <b className="font-medium">{orgName}</b> 确认。</p>
+        <p className="mb-3 text-fs-sm leading-relaxed text-ink-2">此操作无法撤销。请输入团队名称 <b className="font-medium">{orgName}</b> 确认。</p>
         <Input value={confirmName} onChange={(e) => setConfirmName(e.target.value)} aria-label="团队名称" />
       </Modal>
     </section>
@@ -552,12 +552,12 @@ export default function Team() {
     <div className="h-full overflow-y-auto">
       <TopBar />
       <div className="mx-auto max-w-4xl px-6 pt-6 pb-24">
-        <button onClick={() => navigate(-1)} className="mb-6 inline-flex items-center gap-1.5 text-[13px] text-ink-3 transition hover:text-ink">
+        <button onClick={() => navigate(-1)} className="mb-6 inline-flex items-center gap-1.5 text-fs-sm text-ink-3 transition hover:text-ink">
           <ArrowLeft className="size-4" /> 返回
         </button>
         <SectionTitle eyebrow={org.kind === 'personal' ? '个人空间' : '团队'} title="团队管理" />
         <div className="mt-6 flex flex-wrap items-center gap-3">
-          <Input value={name} onChange={(e) => setName(e.target.value)} onBlur={rename} onKeyDown={(e) => e.key === 'Enter' && e.currentTarget.blur()} disabled={!caps.manageMembers} maxLength={40} aria-label="团队名称" className="max-w-xs font-serif text-[16px] font-semibold" />
+          <Input value={name} onChange={(e) => setName(e.target.value)} onBlur={rename} onKeyDown={(e) => e.key === 'Enter' && e.currentTarget.blur()} disabled={!caps.manageMembers} maxLength={40} aria-label="团队名称" className="max-w-xs font-serif text-fs-md font-semibold" />
           <Badge tone="seal">我的角色：{ROLE_LABEL[org.role]}</Badge>
         </div>
 
@@ -567,7 +567,7 @@ export default function Team() {
         {session.me.user.platformAdmin && <SignupCodes />}
         <Danger orgId={org.id} orgName={org.name} kind={org.kind} isOwner={org.role === 'owner'} userId={session.me.user.id} />
 
-        <div className="mt-12 flex items-center justify-between border-t border-line pt-6 text-[12.5px] text-ink-3">
+        <div className="mt-12 flex items-center justify-between border-t border-line pt-6 text-fs-xs text-ink-3">
           <span>
             登录账号：{session.me.user.name}（{session.me.user.phone}）
           </span>

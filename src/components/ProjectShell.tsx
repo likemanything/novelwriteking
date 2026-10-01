@@ -52,20 +52,20 @@ export function ProjectShell() {
           initial={false}
           animate={{ width: focus && section === 'write' ? 0 : 'auto', opacity: focus && section === 'write' ? 0 : 1 }}
           transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-          className="relative z-20 shrink-0 overflow-hidden border-r border-line bg-paper"
+          className="glass relative z-20 shrink-0 overflow-hidden border-y-0 border-l-0"
         >
           <div className="flex h-full w-[72px] flex-col lg:w-[232px]">
             <NavLink to="/" className="group flex h-14 items-center gap-2 px-5 text-ink-3 transition hover:text-ink">
               <ArrowLeft className="size-4 transition-transform group-hover:-translate-x-0.5" />
-              <span className="hidden text-[13px] lg:inline">书架</span>
+              <span className="hidden text-fs-sm lg:inline">书架</span>
               <Seal size={22} className="ml-auto hidden lg:block" />
             </NavLink>
 
             <div className="flex items-center gap-3 px-4 pt-2 pb-5 lg:px-5">
               <Cover spec={project.cover} title={project.title} width={40} tilt={false} className="shrink-0" />
               <div className="hidden min-w-0 lg:block">
-                <div className="truncate font-serif text-[15px] leading-snug font-semibold">{project.title}</div>
-                <div className="mt-0.5 truncate text-[11px] text-ink-3">{project.genre || '未分类'}</div>
+                <div className="truncate font-serif text-fs-md leading-snug font-semibold">{project.title}</div>
+                <div className="mt-0.5 truncate text-fs-2xs text-ink-3">{project.genre || '未分类'}</div>
               </div>
             </div>
 
@@ -76,13 +76,13 @@ export function ProjectShell() {
                   to={n.to ? `/p/${projectId}/${n.to}` : `/p/${projectId}`}
                   end={n.end}
                   title={n.label}
-                  className={({ isActive }) => cx('relative flex h-10 items-center gap-3 rounded-xl px-3 text-[13.5px] transition-colors', isActive ? 'text-ink' : 'text-ink-2 hover:text-ink')}
+                  className={({ isActive }) => cx('relative flex h-10 items-center gap-3 rounded-xl px-3 text-fs-sm transition-colors', isActive ? 'text-ink' : 'text-ink-2 hover:text-ink')}
                 >
                   {({ isActive }) => (
                     <>
                       {isActive && (
-                        <motion.span layoutId="nav-pill" className="absolute inset-0 rounded-xl bg-paper-2 shadow-[var(--shadow-card)] ring-1 ring-line" transition={{ type: 'spring', stiffness: 500, damping: 40 }}>
-                          <span className="absolute top-1/2 left-0 h-4 w-[3px] -translate-y-1/2 rounded-full bg-seal" />
+                        <motion.span layoutId="nav-pill" className="absolute inset-0 rounded-xl border border-line bg-[color:var(--surface-2)] shadow-[var(--elev-1)]" transition={{ type: 'spring', stiffness: 500, damping: 40 }}>
+                          <span className="absolute top-1/2 -left-px h-5 w-[3px] -translate-y-1/2 rounded-full bg-seal shadow-[0_0_12px_var(--seal)]" />
                         </motion.span>
                       )}
                       <n.icon className="relative size-[18px] shrink-0" strokeWidth={1.7} />
@@ -91,7 +91,7 @@ export function ProjectShell() {
                         <motion.span
                           initial={{ scale: 0 }}
                           animate={{ scale: 1 }}
-                          className="absolute top-1.5 left-7 flex h-4 min-w-4 items-center justify-center rounded-full bg-seal px-1 text-[10px] font-medium text-white lg:static lg:ml-auto"
+                          className="absolute top-1.5 left-7 flex h-4 min-w-4 items-center justify-center rounded-full bg-seal px-1 text-fs-2xs font-medium text-white lg:static lg:ml-auto"
                         >
                           {pending.length}
                         </motion.span>
@@ -103,7 +103,7 @@ export function ProjectShell() {
             </nav>
 
             <div className="mx-5 mt-6 hidden lg:block">
-              <div className="mb-1.5 flex justify-between text-[11px] text-ink-3">
+              <div className="mb-1.5 flex justify-between text-fs-2xs text-ink-3">
                 <span>定稿进度</span>
                 <span className="tabular-nums">
                   {finals} / {total}
@@ -118,7 +118,7 @@ export function ProjectShell() {
               <SyncBadge className="px-2 pb-1" />
               <button onClick={() => setPalette(true)} className="flex h-9 items-center gap-2 rounded-lg px-2 text-ink-2 transition hover:bg-ink/[.06] hover:text-ink" aria-label="打开命令面板">
                 <Command className="size-[18px]" strokeWidth={1.7} />
-                <span className="hidden text-[13px] lg:inline">命令</span>
+                <span className="hidden text-fs-sm lg:inline">命令</span>
                 <span className="ml-auto hidden gap-0.5 lg:flex">
                   <Kbd>⌘</Kbd>
                   <Kbd>K</Kbd>

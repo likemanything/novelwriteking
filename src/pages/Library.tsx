@@ -49,8 +49,8 @@ function BookCard({ project, index, canDelete, onDelete }: { project: Project; i
         </div>
         <div className="mx-auto mt-1 h-2 w-[88%] rounded-[50%] bg-ink/15 blur-[5px] transition-all duration-500 group-hover:w-[76%] group-hover:opacity-60" />
         <div className="mt-3">
-          <h3 className="truncate font-serif text-[16px] font-semibold text-ink">{project.title}</h3>
-          <div className="mt-1 flex items-center gap-1.5 text-[11.5px] text-ink-3">
+          <h3 className="truncate font-serif text-fs-md font-semibold text-ink">{project.title}</h3>
+          <div className="mt-1 flex items-center gap-1.5 text-fs-xs text-ink-3">
             <span>{stats?.chapters ?? 0} 章</span>
             <span>·</span>
             <span>{formatNumber(stats?.words ?? 0)} 字</span>
@@ -131,8 +131,8 @@ export function Library() {
       <section className="mx-auto max-w-6xl px-6 pb-24" aria-labelledby="shelf-title">
         <div className="mb-10 flex items-end justify-between border-b border-line pb-4">
           <div>
-            <div className="mb-1 text-[11px] tracking-[.3em] text-seal">书架</div>
-            <h2 id="shelf-title" className="font-serif text-[26px] font-semibold">
+            <div className="mb-1 text-fs-2xs tracking-[.3em] text-seal">书架</div>
+            <h2 id="shelf-title" className="font-serif text-fs-2xl font-semibold">
               你的作品 <span className="text-ink-3 tabular-nums">{projects?.length ?? ''}</span>
             </h2>
           </div>
@@ -164,7 +164,7 @@ export function Library() {
             <span className="flex size-12 items-center justify-center rounded-full border border-current transition-transform duration-500 group-hover:rotate-90">
               <Plus className="size-5" />
             </span>
-            <span className="font-serif text-[15px]">开一本新书</span>
+            <span className="font-serif text-fs-md">开一本新书</span>
           </motion.button>}
           <AnimatePresence>
             {projects?.map((p, i) => (
@@ -174,7 +174,7 @@ export function Library() {
         </div>
       </section>
 
-      <footer className="border-t border-line py-10 text-center text-[12px] leading-6 text-ink-3">
+      <footer className="border-t border-line py-10 text-center text-fs-xs leading-6 text-ink-3">
         <div>作品保存在团队的云端空间，并在这台设备上留有离线副本，断网也能继续写。</div>
         <div>模型请求经墨织服务器转发给团队配置的服务商。仍建议定期「完整备份」。</div>
       </footer>

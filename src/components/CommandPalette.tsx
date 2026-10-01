@@ -180,7 +180,7 @@ export function CommandPalette() {
                 onChange={(e) => setQ(e.target.value)}
                 onKeyDown={onKeyDown}
                 placeholder="跳转到章节、页面，或执行命令…"
-                className="h-14 flex-1 bg-transparent text-[15px] text-ink outline-none placeholder:text-ink-3"
+                className="h-14 flex-1 bg-transparent text-fs-md text-ink outline-none placeholder:text-ink-3"
                 aria-label="搜索命令"
               />
               <Kbd>Esc</Kbd>
@@ -189,7 +189,7 @@ export function CommandPalette() {
               {!filtered.length && <div className="px-3 py-10 text-center text-sm text-ink-3">没有匹配的命令</div>}
               {groups.map((g) => (
                 <div key={g} className="mb-1">
-                  <div className="px-3 pt-2 pb-1 text-[11px] font-medium tracking-wider text-ink-3">{g}</div>
+                  <div className="px-3 pt-2 pb-1 text-fs-2xs font-medium tracking-wider text-ink-3">{g}</div>
                   {filtered
                     .filter((c) => c.group === g)
                     .map((c) => {

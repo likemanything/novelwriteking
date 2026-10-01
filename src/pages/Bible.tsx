@@ -48,13 +48,13 @@ export default function Bible() {
     <div className="h-full overflow-y-auto">
       {!caps.editSettings && (
         <div className="mx-auto max-w-6xl px-8 pt-6" role="status">
-          <div className="rounded-xl bg-gold/10 px-4 py-2.5 text-[12.5px] text-ink-2">你的角色不能修改设定集，这里只能查看。</div>
+          <div className="rounded-xl bg-gold/10 px-4 py-2.5 text-fs-xs text-ink-2">你的角色不能修改设定集，这里只能查看。</div>
         </div>
       )}
       <fieldset disabled={!caps.editSettings} className="contents">
       <div className="mx-auto max-w-6xl px-8 pt-10 pb-24">
         <SectionTitle eyebrow="设定集" title="人物、世界观与故事线" />
-        <p className="mt-2 max-w-2xl text-[13.5px] leading-relaxed text-ink-2">写作时，AI 会从这里取用相关设定作为参考资料。写得越具体，越不容易前后矛盾。</p>
+        <p className="mt-2 max-w-2xl text-fs-sm leading-relaxed text-ink-2">写作时，AI 会从这里取用相关设定作为参考资料。写得越具体，越不容易前后矛盾。</p>
         <Tabs
           className="mt-8"
           value={tab}
@@ -120,16 +120,16 @@ function CharactersTab({ project, characters }: { project: Project; characters: 
               <div className="flex items-center gap-3">
                 <Avatar c={c} size={44} />
                 <div className="min-w-0">
-                  <div className="truncate font-serif text-[18px] font-semibold">{c.name}</div>
+                  <div className="truncate font-serif text-fs-lg font-semibold">{c.name}</div>
                   <div className="mt-0.5 flex items-center gap-1.5">
                     <Badge>{c.role}</Badge>
                     <Badge tone={PROV[c.provenance].tone}>{PROV[c.provenance].label}</Badge>
                   </div>
                 </div>
               </div>
-              <p className="mt-3 line-clamp-2 min-h-[2.8em] text-[13px] leading-relaxed text-ink-2">{c.summary || '还没有人物小传。'}</p>
+              <p className="mt-3 line-clamp-2 min-h-[2.8em] text-fs-sm leading-relaxed text-ink-2">{c.summary || '还没有人物小传。'}</p>
               {(c.state.location || c.state.condition) && (
-                <div className="mt-3 rounded-lg bg-ink/[.035] px-3 py-2 text-[12px] leading-relaxed text-ink-3">
+                <div className="mt-3 rounded-lg bg-ink/[.035] px-3 py-2 text-fs-xs leading-relaxed text-ink-3">
                   <span className="text-ink-2">{c.state.sourceChapter ? `截至第${c.state.sourceChapter}章` : '当前'}</span> · {[c.state.location, c.state.condition].filter(Boolean).join('，')}
                 </div>
               )}
@@ -140,7 +140,7 @@ function CharactersTab({ project, characters }: { project: Project; characters: 
                   setMode('interview');
                   setOpenId(c.id);
                 }}
-                className="flex flex-1 items-center justify-center gap-1.5 py-2.5 text-[12.5px] text-ink-2 transition hover:bg-ink/[.03] hover:text-seal"
+                className="flex flex-1 items-center justify-center gap-1.5 py-2.5 text-fs-xs text-ink-2 transition hover:bg-ink/[.03] hover:text-seal"
               >
                 <MessageCircle className="size-3.5" /> 访谈
               </button>
@@ -149,7 +149,7 @@ function CharactersTab({ project, characters }: { project: Project; characters: 
         ))}
         <button onClick={add} className="flex min-h-48 flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-line-2 text-ink-3 transition hover:border-seal/50 hover:text-seal">
           <Plus className="size-5" />
-          <span className="text-[13px]">添加人物</span>
+          <span className="text-fs-sm">添加人物</span>
         </button>
       </div>
 
@@ -214,7 +214,7 @@ function CharacterEditor({ c, onDeleted }: { c: Character; onDeleted: () => void
       <div className="rounded-2xl border border-line bg-ink/[.02] p-4">
         <div className="mb-3 flex items-center justify-between">
           <span className="text-xs font-medium tracking-wide text-ink-2">当前状态</span>
-          <span className="text-[11px] text-ink-3">{d.state.sourceChapter ? `来自第${d.state.sourceChapter}章定稿` : '作者设定'}</span>
+          <span className="text-fs-2xs text-ink-3">{d.state.sourceChapter ? `来自第${d.state.sourceChapter}章定稿` : '作者设定'}</span>
         </div>
         <div className="grid gap-3">
           {(['location', 'condition', 'knowledge'] as const).map((k) => (
@@ -290,8 +290,8 @@ function Interview({ project, c }: { project: Project; c: Character }) {
             <div className="mx-auto mb-3 w-fit">
               <Avatar c={c} size={56} />
             </div>
-            <div className="font-serif text-[16px]">和{c.name}面对面</div>
-            <p className="mx-auto mt-1.5 max-w-sm text-[12.5px] leading-relaxed text-ink-3">AI 会以{c.name}的身份、口吻与已知信息回答。好的访谈常常能挖出你自己都没想到的动机。</p>
+            <div className="font-serif text-fs-md">和{c.name}面对面</div>
+            <p className="mx-auto mt-1.5 max-w-sm text-fs-xs leading-relaxed text-ink-3">AI 会以{c.name}的身份、口吻与已知信息回答。好的访谈常常能挖出你自己都没想到的动机。</p>
             <div className="mt-4 flex flex-wrap justify-center gap-2">
               {suggestions.map((s) => (
                 <Chip key={s} onClick={() => ask(s)}>
@@ -304,10 +304,10 @@ function Interview({ project, c }: { project: Project; c: Character }) {
         {messages.map((m, i) => (
           <motion.div key={i} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className={cx('flex gap-3', m.role === 'user' && 'flex-row-reverse')}>
             {m.role === 'assistant' && <Avatar c={c} size={32} />}
-            <div className={cx('group max-w-[80%] rounded-2xl px-4 py-2.5 text-[14px] leading-7', m.role === 'user' ? 'rounded-tr-md bg-ink text-paper' : 'surface rounded-tl-md font-serif')}>
+            <div className={cx('group max-w-[80%] rounded-2xl px-4 py-2.5 text-fs-base leading-7', m.role === 'user' ? 'rounded-tr-md bg-ink text-paper' : 'surface rounded-tl-md font-serif')}>
               {m.content}
               {m.role === 'assistant' && (
-                <button onClick={() => keep(m.content)} className="mt-1 flex items-center gap-1 font-sans text-[11px] text-ink-3 opacity-60 transition group-hover:opacity-100 hover:text-seal">
+                <button onClick={() => keep(m.content)} className="mt-1 flex items-center gap-1 font-sans text-fs-2xs text-ink-3 opacity-60 transition group-hover:opacity-100 hover:text-seal">
                   <BookMarked className="size-3" /> 记入人物小传
                 </button>
               )}
@@ -317,7 +317,7 @@ function Interview({ project, c }: { project: Project; c: Character }) {
         {job && (
           <div className="flex gap-3">
             <Avatar c={c} size={32} />
-            <div className="surface max-w-[80%] rounded-2xl rounded-tl-md px-4 py-2.5 font-serif text-[14px] leading-7">
+            <div className="surface max-w-[80%] rounded-2xl rounded-tl-md px-4 py-2.5 font-serif text-fs-base leading-7">
               <span className="ink-caret">{job.text}</span>
             </div>
           </div>
@@ -356,8 +356,8 @@ function WorldTab({ project, world }: { project: Project; world: WorldEntry[] })
         return (
           <section key={cat}>
             <div className="mb-3 flex items-center gap-3">
-              <h3 className="font-serif text-[17px] font-semibold">{cat}</h3>
-              <span className="text-[12px] text-ink-3">{items.length}</span>
+              <h3 className="font-serif text-fs-lg font-semibold">{cat}</h3>
+              <span className="text-fs-xs text-ink-3">{items.length}</span>
               <span className="h-px flex-1 bg-line" />
               <Button variant="ghost" size="xs" icon={<Plus className="size-3.5" />} onClick={() => add(cat)}>
                 添加
@@ -370,7 +370,7 @@ function WorldTab({ project, world }: { project: Project; world: WorldEntry[] })
                 ))}
               </div>
             ) : (
-              <p className="text-[12.5px] text-ink-3">暂无{cat}条目。</p>
+              <p className="text-fs-xs text-ink-3">暂无{cat}条目。</p>
             )}
           </section>
         );
@@ -386,7 +386,7 @@ function WorldCard({ w }: { w: WorldEntry }) {
   return (
     <motion.div layout initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} className="surface group rounded-2xl p-4">
       <div className="flex items-start gap-2">
-        <Input value={d.name} onChange={(e) => set({ name: e.target.value })} placeholder="名称" className="h-9 border-transparent bg-transparent px-2 font-serif text-[16px] font-semibold hover:border-line focus:border-line" autoFocus={!w.name} />
+        <Input value={d.name} onChange={(e) => set({ name: e.target.value })} placeholder="名称" className="h-9 border-transparent bg-transparent px-2 font-serif text-fs-md font-semibold hover:border-line focus:border-line" autoFocus={!w.name} />
         <Badge tone={PROV[d.provenance].tone} className="mt-2 shrink-0">
           {d.sourceChapter ? `第${d.sourceChapter}章` : PROV[d.provenance].label}
         </Badge>
@@ -394,15 +394,15 @@ function WorldCard({ w }: { w: WorldEntry }) {
           <Trash2 className="size-3.5" />
         </IconButton>
       </div>
-      <Textarea bare value={d.content} onChange={(e) => set({ content: e.target.value })} placeholder="写下这条设定……" minRows={2} className="mt-1 text-[13.5px] leading-relaxed text-ink-2" />
+      <Textarea bare value={d.content} onChange={(e) => set({ content: e.target.value })} placeholder="写下这条设定……" minRows={2} className="mt-1 text-fs-sm leading-relaxed text-ink-2" />
       <div className="mt-2 flex items-center gap-2 border-t border-line pt-2">
-        <span className="shrink-0 text-[11px] text-ink-3">关键词</span>
+        <span className="shrink-0 text-fs-2xs text-ink-3">关键词</span>
         <input
           value={kw}
           onChange={(e) => setKw(e.target.value)}
           onBlur={() => set({ keywords: kw.split(/[、,，\s]+/).filter(Boolean) })}
           placeholder="细纲或上文出现这些词时，自动作为参考资料"
-          className="field-bare h-7 px-2 text-[12px]"
+          className="field-bare h-7 px-2 text-fs-xs"
           aria-label="关键词"
         />
       </div>
@@ -443,10 +443,10 @@ function ThreadRow({ t }: { t: Thread }) {
       </div>
       <div className="min-w-0 flex-1 space-y-2">
         <div className="flex flex-wrap items-center gap-2">
-          <Input value={d.name} onChange={(e) => set({ name: e.target.value })} className="h-9 w-56 border-transparent bg-transparent px-2 font-serif text-[16px] font-semibold hover:border-line focus:border-line" aria-label="故事线名称" />
+          <Input value={d.name} onChange={(e) => set({ name: e.target.value })} className="h-9 w-56 border-transparent bg-transparent px-2 font-serif text-fs-md font-semibold hover:border-line focus:border-line" aria-label="故事线名称" />
           <div className="flex flex-wrap gap-1">
             {KINDS.map((k) => (
-              <Chip key={k} active={d.kind === k} onClick={() => set({ kind: k })} className="h-6 text-[11px]">
+              <Chip key={k} active={d.kind === k} onClick={() => set({ kind: k })} className="h-6 text-fs-2xs">
                 {THREAD_KIND_LABEL[k]}
               </Chip>
             ))}
@@ -460,11 +460,11 @@ function ThreadRow({ t }: { t: Thread }) {
             </IconButton>
           </div>
         </div>
-        <Textarea bare value={d.description} onChange={(e) => set({ description: e.target.value })} placeholder="这条故事线要回答什么问题？" minRows={1} className="text-[13.5px] text-ink-2" />
-        <div className="flex items-center gap-3 text-[12px]">
+        <Textarea bare value={d.description} onChange={(e) => set({ description: e.target.value })} placeholder="这条故事线要回答什么问题？" minRows={1} className="text-fs-sm text-ink-2" />
+        <div className="flex items-center gap-3 text-fs-xs">
           <span className="shrink-0 text-ink-3">最新进展</span>
           <input value={d.progress} onChange={(e) => set({ progress: e.target.value })} placeholder="尚未推进" className="field-bare h-7 flex-1 px-2" aria-label="最新进展" />
-          <button onClick={() => set({ status: d.status === 'open' ? 'resolved' : 'open' })} className={cx('shrink-0 rounded-full px-2.5 py-0.5 text-[11px] transition', d.status === 'resolved' ? 'bg-jade/15 text-jade' : 'bg-ink/[.06] text-ink-3 hover:text-ink')}>
+          <button onClick={() => set({ status: d.status === 'open' ? 'resolved' : 'open' })} className={cx('shrink-0 rounded-full px-2.5 py-0.5 text-fs-2xs transition', d.status === 'resolved' ? 'bg-jade/15 text-jade' : 'bg-ink/[.06] text-ink-3 hover:text-ink')}>
             {d.status === 'resolved' ? '已完结' : '进行中'}
           </button>
         </div>
@@ -516,7 +516,7 @@ function StyleTab({ project }: { project: Project }) {
               {s.rules.map((r, i) => (
                 <motion.li key={r + i} initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="group flex items-start gap-2">
                   <span className="mt-3 size-1.5 shrink-0 rounded-full bg-seal" />
-                  <Textarea bare minRows={1} value={r} onChange={(e) => setStyle({ rules: s.rules.map((x, j) => (j === i ? e.target.value : x)) })} className="text-[13.5px]" />
+                  <Textarea bare minRows={1} value={r} onChange={(e) => setStyle({ rules: s.rules.map((x, j) => (j === i ? e.target.value : x)) })} className="text-fs-sm" />
                   <IconButton label="删除守则" size="sm" className="opacity-0 group-hover:opacity-100" onClick={() => setStyle({ rules: s.rules.filter((_, j) => j !== i) })}>
                     <Trash2 className="size-3.5" />
                   </IconButton>
@@ -542,10 +542,10 @@ function StyleTab({ project }: { project: Project }) {
       </div>
       <div>
         <Field label="参考文风片段" hint="贴一段你喜欢的文字（你自己的或授权的）">
-          <Textarea value={s.sample} onChange={(e) => setStyle({ sample: e.target.value })} minRows={12} placeholder="粘贴 300–3000 字……" className="font-serif text-[14.5px] leading-8" />
+          <Textarea value={s.sample} onChange={(e) => setStyle({ sample: e.target.value })} minRows={12} placeholder="粘贴 300–3000 字……" className="font-serif text-fs-base leading-8" />
         </Field>
         <div className="mt-3 flex items-center justify-between">
-          <span className="text-[12px] text-ink-3">{s.sample.length.toLocaleString('zh-CN')} 字 · 前 500 字会作为文风范例发给 AI</span>
+          <span className="text-fs-xs text-ink-3">{s.sample.length.toLocaleString('zh-CN')} 字 · 前 500 字会作为文风范例发给 AI</span>
           <Button variant="ink" size="sm" icon={<Wand2 className="size-4" />} onClick={analyze} loading={!!job}>
             从片段提炼文风
           </Button>
@@ -568,13 +568,13 @@ function StoryTab({ project }: { project: Project }) {
           <Input value={d.title} onChange={(e) => set({ title: e.target.value })} className="h-12 font-serif text-xl" />
         </Field>
         <Field label="一句话故事" hint="谁，想要什么，被什么阻挡">
-          <Textarea value={d.logline} onChange={(e) => set({ logline: e.target.value })} className="font-serif text-[16px]" />
+          <Textarea value={d.logline} onChange={(e) => set({ logline: e.target.value })} className="font-serif text-fs-md" />
         </Field>
         <Field label="故事梗概">
-          <Textarea value={d.premise} onChange={(e) => set({ premise: e.target.value })} minRows={5} className="font-serif text-[15px] leading-8" />
+          <Textarea value={d.premise} onChange={(e) => set({ premise: e.target.value })} minRows={5} className="font-serif text-fs-md leading-8" />
         </Field>
         <Field label="前情提要" hint="定稿后自动整理，也可以手动修改">
-          <Textarea value={d.storySoFar} onChange={(e) => set({ storySoFar: e.target.value })} minRows={4} className="text-[13.5px] leading-7" placeholder="定稿后，这里会自动整理出前文摘要。" />
+          <Textarea value={d.storySoFar} onChange={(e) => set({ storySoFar: e.target.value })} minRows={4} className="text-fs-sm leading-7" placeholder="定稿后，这里会自动整理出前文摘要。" />
         </Field>
       </div>
       <div className="space-y-5">
@@ -592,9 +592,9 @@ function StoryTab({ project }: { project: Project }) {
             <Input type="number" min={300} step={500} value={d.targetWords} onChange={(e) => set({ targetWords: Math.max(300, Number(e.target.value) || 3000) })} />
           </Field>
         </div>
-        <div className="surface rounded-2xl p-4 text-[12.5px] leading-relaxed text-ink-3">
+        <div className="surface rounded-2xl p-4 text-fs-xs leading-relaxed text-ink-3">
           <div className="mb-1 font-medium text-ink-2">最初的那句灵感</div>
-          <p className="font-serif text-[14px] text-ink-2">「{project.seed || '—'}」</p>
+          <p className="font-serif text-fs-base text-ink-2">「{project.seed || '—'}」</p>
         </div>
       </div>
     </div>

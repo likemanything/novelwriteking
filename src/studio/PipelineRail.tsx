@@ -33,7 +33,7 @@ export function PipelineRail({ status, onStep, busy }: { status: ChapterStatus; 
                 {now && <span className={cx('size-2 rounded-full bg-seal', busy && 'animate-[breathe_1.2s_ease-in-out_infinite]')} />}
                 {now && <span className="absolute inset-[-5px] animate-[breathe_2.4s_ease-in-out_infinite] rounded-full border border-seal/30" />}
               </span>
-              <span className={cx('text-[11px] transition-colors', now ? 'font-medium text-ink' : done ? 'text-seal' : 'text-ink-3')}>{STATUS_META[s].label}</span>
+              <span className={cx('text-fs-2xs transition-colors', now ? 'font-medium text-ink' : done ? 'text-seal' : 'text-ink-3')}>{STATUS_META[s].label}</span>
             </button>
           );
         })}

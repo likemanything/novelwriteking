@@ -32,12 +32,12 @@ function Stat({ label, children, sub, icon }: { label: string; children: ReactNo
   return (
     <div className="surface flex items-center gap-4 rounded-2xl px-5 py-4">
       <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-1.5 text-[11.5px] text-ink-3">
+        <div className="flex items-center gap-1.5 text-fs-xs text-ink-3">
           <span className="[&>svg]:size-3.5">{icon}</span>
           {label}
         </div>
-        <div className="mt-1.5 font-serif text-[28px] leading-none font-semibold text-ink">{children}</div>
-        {sub && <div className="mt-1.5 text-[11.5px] text-ink-3">{sub}</div>}
+        <div className="mt-1.5 font-serif text-fs-2xl leading-none font-semibold text-ink">{children}</div>
+        {sub && <div className="mt-1.5 text-fs-xs text-ink-3">{sub}</div>}
       </div>
     </div>
   );
@@ -53,9 +53,9 @@ function ChapterScroll({ chapters, target, words, onOpen }: { chapters: Chapter[
       <div className="mb-5 flex items-center justify-between">
         <div>
           <h2 className="font-serif text-lg font-semibold">各章字数</h2>
-          <p className="text-[12px] text-ink-3">每根柱子是一章，虚线是每章目标 {words.toLocaleString('zh-CN')} 字。</p>
+          <p className="text-fs-xs text-ink-3">每根柱子是一章，虚线是每章目标 {words.toLocaleString('zh-CN')} 字。</p>
         </div>
-        <div className="hidden items-center gap-3 text-[11px] text-ink-3 sm:flex">
+        <div className="hidden items-center gap-3 text-fs-2xs text-ink-3 sm:flex">
           {(Object.keys(STATUS_META) as ChapterStatus[]).map((s) => (
             <span key={s} className="flex items-center gap-1.5">
               <span className="size-2 rounded-full" style={{ background: STATUS_COLOR[s] }} />
@@ -94,7 +94,7 @@ function ChapterScroll({ chapters, target, words, onOpen }: { chapters: Chapter[
           })}
         </div>
       </div>
-      <div className="mt-3 flex h-5 items-center text-[12px] text-ink-2">
+      <div className="mt-3 flex h-5 items-center text-fs-xs text-ink-2">
         {hover ? (
           <span>
             第{chineseNumber(hover.index)}章《{hover.title}》 · {STATUS_META[hover.status].label} · {hover.words.toLocaleString('zh-CN')} 字
@@ -146,9 +146,9 @@ function InkHeatmap({ projectId }: { projectId: string }) {
       <div className="mb-4 flex items-end justify-between">
         <div>
           <h2 className="font-serif text-lg font-semibold">写作日历</h2>
-          <p className="text-[12px] text-ink-3">近二十周每天的写作字数。</p>
+          <p className="text-fs-xs text-ink-3">近二十周每天的写作字数。</p>
         </div>
-        <div className="text-right text-[12px] text-ink-3">
+        <div className="text-right text-fs-xs text-ink-3">
           <div>
             今日 <span className="font-medium text-ink tabular-nums">{today.toLocaleString('zh-CN')}</span> 字
           </div>
@@ -174,7 +174,7 @@ function InkHeatmap({ projectId }: { projectId: string }) {
           </div>
         ))}
       </div>
-      <div className="mt-4 flex items-center gap-2 text-[12.5px]">
+      <div className="mt-4 flex items-center gap-2 text-fs-xs">
         <Flame className={cx('size-4', streak ? 'text-seal' : 'text-ink-3')} />
         {streak ? (
           <span>
@@ -242,7 +242,7 @@ export default function Overview() {
               ))}
             </div>
             <h1 className="mt-4 font-serif text-[44px] leading-tight font-semibold tracking-[.04em]">{project.title}</h1>
-            <p className="mt-3 max-w-2xl font-serif text-[17px] leading-8 text-ink-2">{project.logline || '还没有一句话故事。去设定集写一句吧。'}</p>
+            <p className="mt-3 max-w-2xl font-serif text-fs-lg leading-8 text-ink-2">{project.logline || '还没有一句话故事。去设定集写一句吧。'}</p>
             <div className="mt-6 flex flex-wrap items-center gap-2">
               <Button variant="seal" onClick={() => navigate(continueTo)} icon={<Feather className="size-4" />}>
                 继续写作
@@ -275,30 +275,30 @@ export default function Overview() {
           </Stat>
           <div className="surface flex items-center gap-4 rounded-2xl px-5 py-4">
             <ProgressRing value={finals / Math.max(1, target)} size={56} stroke={4}>
-              <span className="text-[11px] font-medium tabular-nums">{Math.round((finals / Math.max(1, target)) * 100)}%</span>
+              <span className="text-fs-2xs font-medium tabular-nums">{Math.round((finals / Math.max(1, target)) * 100)}%</span>
             </ProgressRing>
             <div>
-              <div className="text-[11.5px] text-ink-3">定稿</div>
-              <div className="mt-1 font-serif text-[24px] leading-none font-semibold">
+              <div className="text-fs-xs text-ink-3">定稿</div>
+              <div className="mt-1 font-serif text-fs-2xl leading-none font-semibold">
                 {finals}
-                <span className="text-[15px] text-ink-3"> / {target} 章</span>
+                <span className="text-fs-md text-ink-3"> / {target} 章</span>
               </div>
             </div>
           </div>
           <Stat label="已规划" icon={<ListTree />} sub={`${chapters.filter((c) => c.status !== 'planned').length} 章已动笔`}>
             <Counter value={chapters.length} />
-            <span className="text-[15px] text-ink-3"> 章</span>
+            <span className="text-fs-md text-ink-3"> 章</span>
           </Stat>
           <Stat label="故事线" icon={<Sparkles />} sub={`${threads.filter((t) => t.status === 'resolved').length} 条已完结`}>
             <Counter value={threads.length} />
-            <span className="text-[15px] text-ink-3"> 条</span>
+            <span className="text-fs-md text-ink-3"> 条</span>
           </Stat>
         </section>
 
         {/* 下一步 */}
         {!!steps.length && (
           <section className="mt-10">
-            <h2 className="mb-4 text-[11px] tracking-[.3em] text-seal">下一步</h2>
+            <h2 className="mb-4 text-fs-2xs tracking-[.3em] text-seal">下一步</h2>
             <div className="grid gap-4 md:grid-cols-3">
               {steps.map((s, i) => (
                 <motion.button
@@ -313,9 +313,9 @@ export default function Overview() {
                   )}
                 >
                   <span className={cx('mb-4 flex size-9 items-center justify-center rounded-xl [&>svg]:size-[18px]', s.primary ? 'bg-paper/10 text-paper' : 'bg-seal/10 text-seal')}>{s.icon}</span>
-                  <span className="font-serif text-[16px] font-semibold">{s.title}</span>
-                  <span className={cx('mt-1.5 line-clamp-2 text-[12.5px] leading-relaxed', s.primary ? 'text-paper/65' : 'text-ink-3')}>{s.detail}</span>
-                  <span className={cx('mt-4 inline-flex items-center gap-1 text-[13px] font-medium', s.primary ? 'text-paper' : 'text-seal')}>
+                  <span className="font-serif text-fs-md font-semibold">{s.title}</span>
+                  <span className={cx('mt-1.5 line-clamp-2 text-fs-xs leading-relaxed', s.primary ? 'text-paper/65' : 'text-ink-3')}>{s.detail}</span>
+                  <span className={cx('mt-4 inline-flex items-center gap-1 text-fs-sm font-medium', s.primary ? 'text-paper' : 'text-seal')}>
                     {s.cta}
                     <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-1" />
                   </span>
@@ -336,7 +336,7 @@ export default function Overview() {
             <div className="mb-4 flex items-end justify-between">
               <div>
                 <h2 className="font-serif text-lg font-semibold">故事线进展</h2>
-                <p className="text-[12px] text-ink-3">每条故事线最近一次推进到了哪里。</p>
+                <p className="text-fs-xs text-ink-3">每条故事线最近一次推进到了哪里。</p>
               </div>
               <Button variant="ghost" size="xs" onClick={() => navigate(`${base}/storylines`)}>
                 查看故事线 <ArrowRight className="size-3" />
@@ -347,16 +347,16 @@ export default function Overview() {
                 <li key={t.id} className="flex items-start gap-3">
                   <span className="mt-2 h-[3px] w-5 shrink-0 rounded-full" style={{ background: t.color }} />
                   <div className="min-w-0">
-                    <div className="flex items-center gap-2 text-[13.5px] font-medium">
+                    <div className="flex items-center gap-2 text-fs-sm font-medium">
                       {t.name}
-                      <span className="text-[11px] font-normal text-ink-3">{THREAD_KIND_LABEL[t.kind]}</span>
+                      <span className="text-fs-2xs font-normal text-ink-3">{THREAD_KIND_LABEL[t.kind]}</span>
                       {t.status === 'resolved' && <Badge tone="jade">已完结</Badge>}
                     </div>
-                    <div className="truncate text-[12.5px] text-ink-3">{t.progress || t.description || '尚未推进'}</div>
+                    <div className="truncate text-fs-xs text-ink-3">{t.progress || t.description || '尚未推进'}</div>
                   </div>
                 </li>
               ))}
-              {!threads.length && <li className="text-[13px] text-ink-3">还没有故事线。</li>}
+              {!threads.length && <li className="text-fs-sm text-ink-3">还没有故事线。</li>}
             </ul>
           </div>
         </section>
@@ -364,8 +364,8 @@ export default function Overview() {
         {project.storySoFar && (
           <section className="surface mt-6 rounded-2xl p-6">
             <h2 className="font-serif text-lg font-semibold">前情提要</h2>
-            <p className="mt-1 text-[12px] text-ink-3">从定稿中整理、经你确认。写作时会作为参考资料使用。</p>
-            <p className="mt-4 font-serif text-[15px] leading-8 text-ink-2">{project.storySoFar}</p>
+            <p className="mt-1 text-fs-xs text-ink-3">从定稿中整理、经你确认。写作时会作为参考资料使用。</p>
+            <p className="mt-4 font-serif text-fs-md leading-8 text-ink-2">{project.storySoFar}</p>
           </section>
         )}
       </div>

@@ -21,8 +21,8 @@ export function VersionsPanel({ chapter, versions, currentText, onRestore, onSna
     <div className="p-5">
       <div className="mb-4 flex items-center justify-between">
         <div>
-          <h3 className="font-serif text-[16px] font-semibold">版本</h3>
-          <p className="text-[12px] text-ink-3">{versions.length} 个版本 · 旧稿永不覆盖</p>
+          <h3 className="font-serif text-fs-md font-semibold">版本</h3>
+          <p className="text-fs-xs text-ink-3">{versions.length} 个版本 · 旧稿永不覆盖</p>
         </div>
         <Button variant="soft" size="xs" icon={<Camera className="size-3.5" />} onClick={onSnapshot} disabled={locked || !currentText.trim()}>
           存快照
@@ -40,11 +40,11 @@ export function VersionsPanel({ chapter, versions, currentText, onRestore, onSna
               </span>
               <div className={cx('group min-w-0 flex-1 rounded-xl border px-3 py-2.5 transition', working ? 'border-seal/30 bg-seal/[.04]' : 'border-line bg-paper hover:border-line-2')}>
                 <div className="flex items-center gap-1.5">
-                  <span className="truncate text-[13px] font-medium">{v.label}</span>
+                  <span className="truncate text-fs-sm font-medium">{v.label}</span>
                   {working && <Badge tone="seal">当前</Badge>}
                   {canon && <Badge tone="jade">定稿</Badge>}
                 </div>
-                <div className="mt-0.5 text-[11.5px] text-ink-3">
+                <div className="mt-0.5 text-fs-xs text-ink-3">
                   {K.label} · {v.words.toLocaleString('zh-CN')} 字 · {relativeTime(v.updatedAt)}
                 </div>
                 {!working && (
@@ -61,7 +61,7 @@ export function VersionsPanel({ chapter, versions, currentText, onRestore, onSna
             </motion.li>
           );
         })}
-        {!versions.length && <li className="pl-12 text-[12.5px] text-ink-3">还没有版本。落下第一个字，就有了第一个版本。</li>}
+        {!versions.length && <li className="pl-12 text-fs-xs text-ink-3">还没有版本。落下第一个字，就有了第一个版本。</li>}
       </ol>
       <DiffModal open={!!compare} onClose={() => setCompare(null)} a={compare?.content ?? ''} b={currentText} aLabel={compare?.label ?? ''} onRestore={compare && !locked ? () => (onRestore(compare), setCompare(null)) : undefined} />
     </div>
@@ -79,7 +79,7 @@ export function DiffModal({ open, onClose, a, b, aLabel, onRestore }: { open: bo
       title={
         <span className="flex items-center gap-3">
           对比：{aLabel} → 当前稿
-          <span className="font-sans text-[12px] font-normal">
+          <span className="font-sans text-fs-xs font-normal">
             <span className="text-jade">+{stats.added}</span> <span className="text-seal">−{stats.removed}</span> 字
           </span>
         </span>
@@ -97,7 +97,7 @@ export function DiffModal({ open, onClose, a, b, aLabel, onRestore }: { open: bo
         </>
       }
     >
-      <div className="max-h-[62vh] overflow-auto rounded-xl bg-paper p-5 font-serif text-[15px] leading-8 whitespace-pre-wrap">
+      <div className="max-h-[62vh] overflow-auto rounded-xl bg-paper p-5 font-serif text-fs-md leading-8 whitespace-pre-wrap">
         {ops.map((o, i) =>
           o.type === 'eq' ? (
             <span key={i} className="text-ink-2">

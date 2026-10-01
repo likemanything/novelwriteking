@@ -108,12 +108,12 @@ export function MuseBubble({ selection, projectId, chapterId, disabled, getDoc, 
       >
         {phase === 'menu' && (
           <div className="flex items-center gap-0.5 rounded-2xl border border-line bg-ink p-1 text-paper shadow-[var(--shadow-float)]" role="toolbar" aria-label="AI 改写">
-            <span className="flex items-center gap-1 px-2 text-[11px] text-paper/60">
+            <span className="flex items-center gap-1 px-2 text-fs-2xs text-paper/60">
               <Sparkles className="size-3.5 text-gold" />
               AI 改写
             </span>
             {MUSE_ACTIONS.map((a) => (
-              <button key={a.id} onClick={() => pick(a.id)} title={a.hint} className="rounded-xl px-2.5 py-1.5 text-[12.5px] transition hover:bg-paper/12">
+              <button key={a.id} onClick={() => pick(a.id)} title={a.hint} className="rounded-xl px-2.5 py-1.5 text-fs-xs transition hover:bg-paper/12">
                 {a.label}
               </button>
             ))}
@@ -122,7 +122,7 @@ export function MuseBubble({ selection, projectId, chapterId, disabled, getDoc, 
 
         {phase !== 'menu' && (
           <div className="overflow-hidden rounded-2xl border border-line bg-paper-2 shadow-[var(--shadow-float)]">
-            <div className="flex items-center gap-2 border-b border-line px-4 py-2.5 text-[12px] text-ink-3">
+            <div className="flex items-center gap-2 border-b border-line px-4 py-2.5 text-fs-xs text-ink-3">
               <Sparkles className="size-3.5 text-gold" />
               <span className="font-medium text-ink">AI 改写 · {MUSE_ACTIONS.find((a) => a.id === action)?.label}</span>
               <span className="truncate">「{locked?.text.slice(0, 18)}{(locked?.text.length ?? 0) > 18 ? '…' : ''}」</span>
@@ -142,14 +142,14 @@ export function MuseBubble({ selection, projectId, chapterId, disabled, getDoc, 
                 {action === 'tone' && (
                   <div className="flex flex-wrap gap-1.5">
                     {TONE_PRESETS.map((t) => (
-                      <button key={t} type="button" onClick={() => locked && (setInstruction(t), run('tone', locked, t))} className="rounded-full border border-line-2 px-2.5 py-1 text-[12px] text-ink-2 transition hover:border-seal/50 hover:text-seal">
+                      <button key={t} type="button" onClick={() => locked && (setInstruction(t), run('tone', locked, t))} className="rounded-full border border-line-2 px-2.5 py-1 text-fs-xs text-ink-2 transition hover:border-seal/50 hover:text-seal">
                         {t}
                       </button>
                     ))}
                   </div>
                 )}
                 <div className="flex gap-2">
-                  <input ref={inputRef} value={instruction} onChange={(e) => setInstruction(e.target.value)} placeholder={action === 'tone' ? '或者描述想要的气氛……' : '说说想怎么改，例如：改成他的回忆'} className="field h-9 text-[13px]" aria-label="改写指令" />
+                  <input ref={inputRef} value={instruction} onChange={(e) => setInstruction(e.target.value)} placeholder={action === 'tone' ? '或者描述想要的气氛……' : '说说想怎么改，例如：改成他的回忆'} className="field h-9 text-fs-sm" aria-label="改写指令" />
                   <Button type="submit" variant="ink" size="sm" disabled={!instruction.trim()}>
                     <ArrowRight className="size-4" />
                   </Button>
@@ -159,7 +159,7 @@ export function MuseBubble({ selection, projectId, chapterId, disabled, getDoc, 
 
             {(phase === 'running' || phase === 'result') && (
               <div className="p-4">
-                <div className="max-h-[38vh] overflow-y-auto font-serif text-[15px] leading-8 text-ink">
+                <div className="max-h-[38vh] overflow-y-auto font-serif text-fs-md leading-8 text-ink">
                   <span className={cx(phase === 'running' && 'ink-caret')}>{phase === 'running' ? job?.text ?? '' : result}</span>
                 </div>
                 <div className="mt-3 flex items-center gap-2 border-t border-line pt-3">

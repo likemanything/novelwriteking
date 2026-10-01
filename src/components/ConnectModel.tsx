@@ -127,10 +127,10 @@ export function DetectTrack({ steps }: { steps: Steps }) {
                   </>
                 )}
               </span>
-              <span className={cx('text-[12px] font-medium', st.state === 'idle' ? 'text-ink-3' : 'text-ink')}>{s.label}</span>
+              <span className={cx('text-fs-xs font-medium', st.state === 'idle' ? 'text-ink-3' : 'text-ink')}>{s.label}</span>
               <AnimatePresence mode="wait">
                 {st.info && (
-                  <motion.span key={st.info} initial={{ opacity: 0, y: -3 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="line-clamp-2 w-full font-mono text-[10.5px] leading-snug break-all text-ink-3" title={st.info}>
+                  <motion.span key={st.info} initial={{ opacity: 0, y: -3 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="line-clamp-2 w-full font-mono text-fs-2xs leading-snug break-all text-ink-3" title={st.info}>
                     {st.info}
                   </motion.span>
                 )}
@@ -147,7 +147,7 @@ function KeyInput({ value, onChange, placeholder, invalid, id }: { value: string
   const [show, setShow] = useState(false);
   return (
     <motion.div className="relative" animate={invalid ? { x: [0, -6, 6, -4, 4, 0] } : { x: 0 }} transition={{ duration: 0.4 }}>
-      <Input id={id} type={show ? 'text' : 'password'} value={value} onChange={(e) => onChange(e.target.value.trim())} placeholder={placeholder} className={cx('pr-10 font-mono text-[12.5px]', invalid && 'border-seal/60')} autoComplete="off" spellCheck={false} aria-invalid={invalid || undefined} />
+      <Input id={id} type={show ? 'text' : 'password'} value={value} onChange={(e) => onChange(e.target.value.trim())} placeholder={placeholder} className={cx('pr-10 font-mono text-fs-xs', invalid && 'border-seal/60')} autoComplete="off" spellCheck={false} aria-invalid={invalid || undefined} />
       <button type="button" onClick={() => setShow(!show)} className="absolute top-1/2 right-2 -translate-y-1/2 rounded-md p-1 text-ink-3 hover:text-ink" aria-label={show ? '隐藏密钥' : '显示密钥'}>
         {show ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
       </button>
@@ -165,15 +165,15 @@ function Outcome({ c, onSaved, onRetryWithModel }: { c: ReturnType<typeof useCon
         <motion.span className="absolute -top-3 right-3" initial={{ scale: 2.4, rotate: -25, opacity: 0 }} animate={{ scale: 1, rotate: -10, opacity: 1 }} transition={{ type: 'spring', stiffness: 420, damping: 16 }}>
           <Seal chars="通" size={44} fine seed={7} />
         </motion.span>
-        <div className="flex flex-wrap items-center gap-2 pr-12 text-[13px]">
+        <div className="flex flex-wrap items-center gap-2 pr-12 text-fs-sm">
           <span className="font-medium text-ink">已连接 {cred.name}</span>
           <Badge tone="jade">{cred.protocolLabel}</Badge>
-          <span className="font-mono text-[11.5px] text-ink-3">{cred.model}</span>
+          <span className="font-mono text-fs-xs text-ink-3">{cred.model}</span>
         </div>
-        {r.reply && <div className="mt-1 text-[12.5px] text-ink-2">模型回复：「{r.reply}」</div>}
-        {r.warning && <div className="mt-1 text-[12px] text-gold">{r.warning}</div>}
+        {r.reply && <div className="mt-1 text-fs-xs text-ink-2">模型回复：「{r.reply}」</div>}
+        {r.warning && <div className="mt-1 text-fs-xs text-gold">{r.warning}</div>}
         {onSaved && (
-          <button onClick={onSaved} className="mt-2 text-[12px] text-ink-3 underline-offset-2 hover:text-ink hover:underline">
+          <button onClick={onSaved} className="mt-2 text-fs-xs text-ink-3 underline-offset-2 hover:text-ink hover:underline">
             接入另一个
           </button>
         )}
@@ -184,7 +184,7 @@ function Outcome({ c, onSaved, onRetryWithModel }: { c: ReturnType<typeof useCon
     const needModel = c.error instanceof DetectError && (c.error.code === 'need-model' || c.error.code === 'no-protocol');
     return (
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="mt-4 rounded-xl border border-seal/25 bg-seal/[.05] px-4 py-3" role="alert">
-        <div className="flex items-start gap-2 text-[12.5px] leading-relaxed text-ink">
+        <div className="flex items-start gap-2 text-fs-xs leading-relaxed text-ink">
           <AlertTriangle className="mt-0.5 size-4 shrink-0 text-seal" />
           <span className="break-words">{c.error.message}</span>
         </div>
@@ -196,7 +196,7 @@ function Outcome({ c, onSaved, onRetryWithModel }: { c: ReturnType<typeof useCon
               if (model.trim()) onRetryWithModel(model.trim());
             }}
           >
-            <Input value={model} onChange={(e) => setModel(e.target.value)} placeholder="模型名，例如 gpt-4o 或 claude-sonnet-4-5" className="h-9 font-mono text-[12.5px]" aria-label="模型名" />
+            <Input value={model} onChange={(e) => setModel(e.target.value)} placeholder="模型名，例如 gpt-4o 或 claude-sonnet-4-5" className="h-9 font-mono text-fs-xs" aria-label="模型名" />
             <Button type="submit" size="sm" variant="ink" disabled={!model.trim()}>
               用它试连
             </Button>
@@ -217,8 +217,8 @@ function CardShell({ icon, title, desc, children, accent }: { icon: ReactNode; t
           {icon}
         </span>
         <div className="min-w-0">
-          <h3 className="font-serif text-[19px] font-semibold">{title}</h3>
-          <p className="mt-0.5 text-[12.5px] leading-relaxed text-ink-3">{desc}</p>
+          <h3 className="font-serif text-fs-xl font-semibold">{title}</h3>
+          <p className="mt-0.5 text-fs-xs leading-relaxed text-ink-3">{desc}</p>
         </div>
       </div>
       <div className="relative mt-5 flex flex-1 flex-col">{children}</div>
@@ -268,7 +268,7 @@ export function ConnectModel() {
           </label>
           <KeyInput id="ds-key" value={dsKey} onChange={setDsKey} placeholder="sk-…" invalid={authBad(ds)} />
           {ds.phase === 'idle' && (
-            <ul className="mt-2 space-y-2 text-[12.5px] leading-relaxed text-ink-2">
+            <ul className="mt-2 space-y-2 text-fs-xs leading-relaxed text-ink-2">
               {['地址与协议已预设，不用再填', '自动读取你的账户可用的全部模型，可随时切换', '深度思考模型的思考过程不会混进正文'].map((t) => (
                 <li key={t} className="flex gap-2">
                   <Check className="mt-1 size-3.5 shrink-0 text-[#4d6bfe]" strokeWidth={2.5} />
@@ -278,7 +278,7 @@ export function ConnectModel() {
             </ul>
           )}
           <div className="mt-auto flex items-center justify-between gap-3 pt-4">
-            <a href="https://platform.deepseek.com/api_keys" target="_blank" rel="noreferrer noopener" className="inline-flex items-center gap-1 text-[12px] text-ink-3 transition hover:text-ink">
+            <a href="https://platform.deepseek.com/api_keys" target="_blank" rel="noreferrer noopener" className="inline-flex items-center gap-1 text-fs-xs text-ink-3 transition hover:text-ink">
               获取 Key <ExternalLink className="size-3" />
             </a>
             {ds.phase === 'running' ? (
@@ -306,11 +306,11 @@ export function ConnectModel() {
             接口地址
           </label>
           <motion.div animate={urlBad ? { x: [0, -6, 6, -4, 4, 0] } : { x: 0 }} transition={{ duration: 0.4 }}>
-            <Input id="gen-url" value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://api.example.com/v1" className={cx('font-mono text-[12.5px]', urlBad && 'border-seal/60')} spellCheck={false} aria-invalid={urlBad || undefined} />
+            <Input id="gen-url" value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://api.example.com/v1" className={cx('font-mono text-fs-xs', urlBad && 'border-seal/60')} spellCheck={false} aria-invalid={urlBad || undefined} />
           </motion.div>
           <div className="flex flex-wrap gap-1.5" aria-label="常见地址">
             {URL_EXAMPLES.map((x) => (
-              <button key={x.label} type="button" onClick={() => setUrl(x.url)} className={cx('rounded-full border px-2.5 py-0.5 text-[11.5px] transition', url === x.url ? 'border-seal/50 bg-seal/[.06] text-seal' : 'border-line text-ink-3 hover:border-line-2 hover:text-ink-2')}>
+              <button key={x.label} type="button" onClick={() => setUrl(x.url)} className={cx('rounded-full border px-2.5 py-0.5 text-fs-xs transition', url === x.url ? 'border-seal/50 bg-seal/[.06] text-seal' : 'border-line text-ink-3 hover:border-line-2 hover:text-ink-2')}>
                 {x.label}
               </button>
             ))}

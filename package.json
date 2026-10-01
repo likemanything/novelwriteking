@@ -22,7 +22,8 @@
     "typecheck": "tsc -p .",
     "start": "tsx server/index.ts",
     "test:ai": "tsx --test tests/ai.test.ts",
-    "test": "npm run test:ai && npm run test:api"
+    "test": "npm run test:ai && npm run test:api",
+    "check:design": "node scripts/check-design.mjs"
   },
   "dependencies": {
     "@codemirror/commands": "6.11.1",

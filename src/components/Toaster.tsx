@@ -34,7 +34,7 @@ export function Toaster() {
             </div>
             {t.action && (
               <button
-                className="shrink-0 rounded-lg px-2.5 py-1 text-[13px] font-medium text-seal transition hover:bg-seal/10"
+                className="shrink-0 rounded-lg px-2.5 py-1 text-fs-sm font-medium text-seal transition hover:bg-seal/10"
                 onClick={() => {
                   t.action!.run();
                   dismissToast(t.id);

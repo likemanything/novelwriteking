@@ -84,7 +84,7 @@ function ProfileCard({ p, canEdit, onRemove }: { p: CredentialInfo; canEdit: boo
               disabled={!canEdit}
               onChange={(e) => setDraft({ ...draft, name: e.target.value })}
               onBlur={() => draft.name.trim() && draft.name !== p.name && save({ name: draft.name })}
-              className="field-bare h-7 w-auto max-w-56 px-1.5 font-serif text-[16px] font-semibold"
+              className="field-bare h-7 w-auto max-w-56 px-1.5 font-serif text-fs-md font-semibold"
               style={{ width: `${Math.max(4, [...draft.name].reduce((w, ch) => w + (/[\u2e80-\u9fff\uff00-\uffef]/.test(ch) ? 1 : 0.62), 0) + 1.2)}em` }}
               aria-label="模型名称"
             />
@@ -95,7 +95,7 @@ function ProfileCard({ p, canEdit, onRemove }: { p: CredentialInfo; canEdit: boo
               </Badge>
             ))}
           </div>
-          <div className="mt-0.5 truncate px-1.5 font-mono text-[11.5px] text-ink-3" title={p.baseUrl}>
+          <div className="mt-0.5 truncate px-1.5 font-mono text-fs-xs text-ink-3" title={p.baseUrl}>
             {p.baseUrl}
             {p.keyHint ? ` · Key ${p.keyHint}` : ''}
           </div>
@@ -105,7 +105,7 @@ function ProfileCard({ p, canEdit, onRemove }: { p: CredentialInfo; canEdit: boo
             <label className="relative">
               <span className="sr-only">使用的模型</span>
               {models.length ? (
-                <select value={p.model} onChange={(e) => save({ model: e.target.value })} className="field h-9 max-w-60 cursor-pointer appearance-none pr-8 font-mono text-[12px]">
+                <select value={p.model} onChange={(e) => save({ model: e.target.value })} className="field h-9 max-w-60 cursor-pointer appearance-none pr-8 font-mono text-fs-xs">
                   {models.map((m) => (
                     <option key={m} value={m}>
                       {m}
@@ -113,9 +113,9 @@ function ProfileCard({ p, canEdit, onRemove }: { p: CredentialInfo; canEdit: boo
                   ))}
                 </select>
               ) : (
-                <Input value={draft.model} onChange={(e) => setDraft({ ...draft, model: e.target.value.trim() })} onBlur={() => draft.model && draft.model !== p.model && save({ model: draft.model })} placeholder="模型名" className="h-9 w-48 font-mono text-[12px]" spellCheck={false} />
+                <Input value={draft.model} onChange={(e) => setDraft({ ...draft, model: e.target.value.trim() })} onBlur={() => draft.model && draft.model !== p.model && save({ model: draft.model })} placeholder="模型名" className="h-9 w-48 font-mono text-fs-xs" spellCheck={false} />
               )}
-              {models.length > 0 && <span className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-[10px] text-ink-3">▼</span>}
+              {models.length > 0 && <span className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-fs-2xs text-ink-3">▼</span>}
             </label>
             <Button variant="outline" size="sm" onClick={runTest} loading={test.status === 'testing'}>
               测试
@@ -128,14 +128,14 @@ function ProfileCard({ p, canEdit, onRemove }: { p: CredentialInfo; canEdit: boo
             </IconButton>
           </>
         ) : (
-          <span className="font-mono text-[12px] text-ink-3">{p.model}</span>
+          <span className="font-mono text-fs-xs text-ink-3">{p.model}</span>
         )}
       </div>
 
       <AnimatePresence initial={false}>
         {test.status !== 'idle' && test.status !== 'testing' && (
           <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
-            <div className={cx('mx-5 mb-4 flex items-start gap-1.5 rounded-lg px-3 py-2 text-[12px]', test.status === 'ok' ? 'bg-jade/10 text-jade' : 'bg-seal/[.07] text-seal')} role={test.status === 'fail' ? 'alert' : 'status'}>
+            <div className={cx('mx-5 mb-4 flex items-start gap-1.5 rounded-lg px-3 py-2 text-fs-xs', test.status === 'ok' ? 'bg-jade/10 text-jade' : 'bg-seal/[.07] text-seal')} role={test.status === 'fail' ? 'alert' : 'status'}>
               {test.status === 'ok' ? <Check className="mt-0.5 size-3.5 shrink-0" /> : <X className="mt-0.5 size-3.5 shrink-0" />}
               <span className="break-words">{test.message}</span>
             </div>
@@ -160,7 +160,7 @@ function ProfileCard({ p, canEdit, onRemove }: { p: CredentialInfo; canEdit: boo
                   />
                 </Field>
                 <Field label="模型标识" hint="可手动填写列表外的模型">
-                  <Input value={draft.model} onChange={(e) => setDraft({ ...draft, model: e.target.value.trim() })} onBlur={() => draft.model && draft.model !== p.model && save({ model: draft.model })} list={`models-${p.id}`} className="font-mono text-[12.5px]" spellCheck={false} />
+                  <Input value={draft.model} onChange={(e) => setDraft({ ...draft, model: e.target.value.trim() })} onBlur={() => draft.model && draft.model !== p.model && save({ model: draft.model })} list={`models-${p.id}`} className="font-mono text-fs-xs" spellCheck={false} />
                   <datalist id={`models-${p.id}`}>
                     {p.models.map((m) => (
                       <option key={m} value={m} />
@@ -168,7 +168,7 @@ function ProfileCard({ p, canEdit, onRemove }: { p: CredentialInfo; canEdit: boo
                   </datalist>
                 </Field>
                 <Field label="接口地址" hint={p.provider === 'anthropic' ? '/v1/messages' : '/chat/completions'}>
-                  <Input value={draft.baseUrl} onChange={(e) => setDraft({ ...draft, baseUrl: e.target.value.trim() })} onBlur={() => draft.baseUrl !== p.baseUrl && save({ baseUrl: draft.baseUrl })} placeholder="https://api.example.com/v1" className="font-mono text-[12.5px]" spellCheck={false} />
+                  <Input value={draft.baseUrl} onChange={(e) => setDraft({ ...draft, baseUrl: e.target.value.trim() })} onBlur={() => draft.baseUrl !== p.baseUrl && save({ baseUrl: draft.baseUrl })} placeholder="https://api.example.com/v1" className="font-mono text-fs-xs" spellCheck={false} />
                 </Field>
                 <Field label="API Key" hint={newKey === null ? `已加密保存${p.keyHint ? `（${p.keyHint}）` : ''}，不会再显示` : local ? '本地模型可留空' : '填写后覆盖原有的 Key'}>
                   <div className="relative">
@@ -180,7 +180,7 @@ function ProfileCard({ p, canEdit, onRemove }: { p: CredentialInfo; canEdit: boo
                         if (newKey !== null) save({ apiKey: newKey }).then(() => setNewKey(null));
                       }}
                       placeholder="粘贴新的 Key 以更换"
-                      className="pr-10 font-mono text-[12.5px]"
+                      className="pr-10 font-mono text-fs-xs"
                       autoComplete="off"
                       spellCheck={false}
                     />
@@ -197,7 +197,7 @@ function ProfileCard({ p, canEdit, onRemove }: { p: CredentialInfo; canEdit: boo
                 </Field>
               </div>
               <div className="mt-4 flex flex-wrap items-center gap-4 border-t border-line pt-4">
-                <span className="text-[12px] text-ink-3">密钥由服务器加密保存，团队成员使用模型时不会看到它。</span>
+                <span className="text-fs-xs text-ink-3">密钥由服务器加密保存，团队成员使用模型时不会看到它。</span>
                 <Button variant="soft" size="sm" className="ml-auto" icon={<Radar className="size-3.5" />} onClick={runRedetect} loading={redetect.phase === 'running'}>
                   重新识别
                 </Button>
@@ -206,7 +206,7 @@ function ProfileCard({ p, canEdit, onRemove }: { p: CredentialInfo; canEdit: boo
                 <div className="mt-4">
                   <DetectTrack steps={redetect.steps} />
                   {redetect.error && (
-                    <p className="mt-3 text-[12px] text-seal" role="alert">
+                    <p className="mt-3 text-fs-xs text-seal" role="alert">
                       {redetect.error.message}
                     </p>
                   )}
@@ -242,20 +242,20 @@ function StageBoard({ canEdit }: { canEdit: boolean }) {
           <motion.div key={s} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06 }} className="surface relative overflow-hidden rounded-2xl p-5">
             <span className="absolute -top-8 -right-8 size-24 rounded-full bg-seal/[.07]" />
             <span className="relative flex size-9 items-center justify-center rounded-xl bg-seal/10 text-seal [&>svg]:size-[18px]">{STAGE_ICON[s]}</span>
-            <div className="relative mt-4 font-serif text-[18px] font-semibold">{STAGE_LABEL[s].label}</div>
-            <div className="relative text-[12px] text-ink-3">{STAGE_LABEL[s].hint}</div>
+            <div className="relative mt-4 font-serif text-fs-lg font-semibold">{STAGE_LABEL[s].label}</div>
+            <div className="relative text-fs-xs text-ink-3">{STAGE_LABEL[s].hint}</div>
             <label className="relative mt-4 block">
               <span className="sr-only">{STAGE_LABEL[s].label}使用的模型</span>
-              <select value={current.id} disabled={!canEdit} onChange={(e) => setStage(s, e.target.value)} className="field h-9 cursor-pointer appearance-none pr-8 text-[13px] disabled:cursor-not-allowed disabled:opacity-70">
+              <select value={current.id} disabled={!canEdit} onChange={(e) => setStage(s, e.target.value)} className="field h-9 cursor-pointer appearance-none pr-8 text-fs-sm disabled:cursor-not-allowed disabled:opacity-70">
                 {options.map((p) => (
                   <option key={p.id} value={p.id}>
                     {p.name}
                   </option>
                 ))}
               </select>
-              <span className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-[10px] text-ink-3">▼</span>
+              <span className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-fs-2xs text-ink-3">▼</span>
             </label>
-            <div className="relative mt-2 flex items-center gap-1.5 text-[11px] text-ink-3">
+            <div className="relative mt-2 flex items-center gap-1.5 text-fs-2xs text-ink-3">
               <span className={cx('size-1.5 rounded-full', current.provider === 'demo' ? 'bg-gold' : 'bg-jade')} />
               {current.provider === 'demo' ? '离线演示，不消耗额度' : current.model}
             </div>
@@ -278,7 +278,7 @@ function StorageInfo() {
   if (!usage) return null;
   const mb = (n: number) => `${(n / 1024 / 1024).toFixed(1)} MB`;
   return (
-    <div className="flex items-center gap-2 text-[12.5px] text-ink-3">
+    <div className="flex items-center gap-2 text-fs-xs text-ink-3">
       <HardDrive className="size-4" />
       已用 {mb(usage.used)}
       {usage.quota ? ` / 可用约 ${formatNumber(Math.round(usage.quota / 1024 / 1024))} MB` : ''}
@@ -313,24 +313,24 @@ export default function Settings() {
     <div className="h-full overflow-y-auto">
       <TopBar />
       <div className="mx-auto max-w-5xl px-6 pt-6 pb-24">
-        <button onClick={() => navigate(-1)} className="mb-6 inline-flex items-center gap-1.5 text-[13px] text-ink-3 transition hover:text-ink">
+        <button onClick={() => navigate(-1)} className="mb-6 inline-flex items-center gap-1.5 text-fs-sm text-ink-3 transition hover:text-ink">
           <ArrowLeft className="size-4" /> 返回
         </button>
         <SectionTitle eyebrow="设置" title="模型与偏好" />
-        <p className="mt-2 max-w-2xl text-[13.5px] leading-relaxed text-ink-2">墨织不提供、不托管任何模型。团队接入自己的服务商后，提示词与上下文只会发送给这里配置的地址。</p>
+        <p className="mt-2 max-w-2xl text-fs-sm leading-relaxed text-ink-2">墨织不提供、不托管任何模型。团队接入自己的服务商后，提示词与上下文只会发送给这里配置的地址。</p>
 
         {/* 模型 */}
         <section className="mt-12">
           <div className="mb-5">
-            <h2 className="font-serif text-[20px] font-semibold">接入模型</h2>
-            <p className="text-[12.5px] text-ink-3">
+            <h2 className="font-serif text-fs-xl font-semibold">接入模型</h2>
+            <p className="text-fs-xs text-ink-3">
               {caps.manageModels ? '模型属于当前团队，由管理员接入，成员共用。DeepSeek 只要一把 Key；其他服务填地址和 Key，墨织会自动识别协议、读取模型列表，并试写一句确认连通。' : '模型由团队管理员接入，你可以直接在写作中使用。'}
             </p>
           </div>
           {caps.manageModels && <ConnectModel />}
 
           <div className="mt-10 mb-4 flex items-end justify-between">
-            <h3 className="font-serif text-[17px] font-semibold">
+            <h3 className="font-serif text-fs-lg font-semibold">
               已接入 <span className="text-ink-3 tabular-nums">{credentials.length || ''}</span>
             </h3>
           </div>
@@ -345,13 +345,13 @@ export default function Settings() {
                 <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-gold/15 text-gold">
                   <Wand2 className="size-5" />
                 </span>
-                <div className="text-[13px] leading-relaxed text-ink-2">
+                <div className="text-fs-sm leading-relaxed text-ink-2">
                   现在使用的是<b className="font-medium text-ink">离线演示引擎</b>：它不是语言模型，只用于体验完整流程。{caps.manageModels ? '在上面接入一个真实模型后，它会自动接管全部环节。' : '请联系管理员接入模型。'}
                 </div>
               </div>
             )}
           </div>
-          <div className="mt-4 flex items-start gap-2.5 rounded-xl bg-ink/[.03] px-4 py-3 text-[12px] leading-relaxed text-ink-3">
+          <div className="mt-4 flex items-start gap-2.5 rounded-xl bg-ink/[.03] px-4 py-3 text-fs-xs leading-relaxed text-ink-3">
             <ShieldAlert className="mt-0.5 size-4 shrink-0 text-gold" />
             <span>API Key 经服务器加密保存，不会下发到任何成员的浏览器。提示词与上下文会经墨织服务器转发给团队配置的模型服务商，并按成员记录用量。</span>
           </div>
@@ -359,8 +359,8 @@ export default function Settings() {
 
         {/* 分工 */}
         <section className="mt-14">
-          <h2 className="font-serif text-[20px] font-semibold">环节分工</h2>
-          <p className="mb-5 text-[12.5px] text-ink-3">不同环节可以用不同的模型：最强的负责写作，严谨的负责审稿，快速便宜的负责改写。{!caps.manageModels && '（只有管理员可以调整）'}</p>
+          <h2 className="font-serif text-fs-xl font-semibold">环节分工</h2>
+          <p className="mb-5 text-fs-xs text-ink-3">不同环节可以用不同的模型：最强的负责写作，严谨的负责审稿，快速便宜的负责改写。{!caps.manageModels && '（只有管理员可以调整）'}</p>
           <StageBoard canEdit={caps.manageModels} />
         </section>
 
@@ -386,14 +386,14 @@ export default function Settings() {
 
         {/* 媒体模型 */}
         <section className="mt-14">
-          <h2 className="font-serif text-[20px] font-semibold">图像 · 视频 · 配音模型</h2>
-          <p className="mb-5 text-[12.5px] text-ink-3">用于短剧：角色定妆照、场景图、镜头视频与配音。任何厂商都能接入——用一份「适配声明」描述它的调用方式即可。</p>
+          <h2 className="font-serif text-fs-xl font-semibold">图像 · 视频 · 配音模型</h2>
+          <p className="mb-5 text-fs-xs text-ink-3">用于短剧：角色定妆照、场景图、镜头视频与配音。任何厂商都能接入——用一份「适配声明」描述它的调用方式即可。</p>
           <MediaProviders canEdit={caps.manageModels} />
         </section>
 
         {/* 偏好 */}
         <section className="mt-14">
-          <h2 className="mb-5 font-serif text-[20px] font-semibold">写作偏好</h2>
+          <h2 className="mb-5 font-serif text-fs-xl font-semibold">写作偏好</h2>
           <div className="surface divide-y divide-line rounded-2xl">
             <Row title="主题" hint="日间或夜间配色，也可以跟随系统。">
               <Segmented
@@ -410,7 +410,7 @@ export default function Settings() {
             <Row title="正文字号" hint="稿纸编辑器的字号。">
               <div className="flex items-center gap-3">
                 <input type="range" min={14} max={26} value={s.editorSize} onChange={(e) => s.patch({ editorSize: Number(e.target.value) })} className="w-40 accent-[var(--seal)]" aria-label="正文字号" />
-                <span className="w-10 text-right font-serif text-[15px] tabular-nums">{s.editorSize}</span>
+                <span className="w-10 text-right font-serif text-fs-md tabular-nums">{s.editorSize}</span>
               </div>
             </Row>
             <Row title="打字机模式" hint="输入时让当前行始终停在屏幕中央。">
@@ -419,7 +419,7 @@ export default function Settings() {
             <Row title="上下文预算" hint="每次生成最多装入多少 token 的设定资料。模型窗口越大，可以设得越高。">
               <div className="flex items-center gap-3">
                 <input type="range" min={2000} max={64000} step={1000} value={s.contextBudget} onChange={(e) => s.patch({ contextBudget: Number(e.target.value) })} className="w-40 accent-[var(--seal)]" aria-label="上下文预算" />
-                <span className="w-16 text-right text-[13px] tabular-nums">{(s.contextBudget / 1000).toFixed(0)}k</span>
+                <span className="w-16 text-right text-fs-sm tabular-nums">{(s.contextBudget / 1000).toFixed(0)}k</span>
               </div>
             </Row>
             <Row title="减少动态效果" hint="关闭首页背景动画与大部分过渡动画。系统已开启「减弱动态效果」时自动生效。">
@@ -430,21 +430,21 @@ export default function Settings() {
 
         {/* 团队 */}
         <section className="mt-14">
-          <h2 className="mb-1 font-serif text-[20px] font-semibold">团队与账号</h2>
-          <p className="mb-5 text-[12.5px] text-ink-3">成员、邀请链接、AI 用量与额度。</p>
+          <h2 className="mb-1 font-serif text-fs-xl font-semibold">团队与账号</h2>
+          <p className="mb-5 text-fs-xs text-ink-3">成员、邀请链接、AI 用量与额度。</p>
           <Link to="/team" className="surface flex items-center gap-3 rounded-2xl p-5 transition hover:shadow-[var(--shadow-card)]">
             <span className="flex size-9 items-center justify-center rounded-xl bg-seal/10 text-seal">
               <Users className="size-[18px]" />
             </span>
-            <span className="text-[14px] font-medium">打开团队管理</span>
+            <span className="text-fs-base font-medium">打开团队管理</span>
             <ArrowLeft className="ml-auto size-4 rotate-180 text-ink-3" />
           </Link>
         </section>
 
         {/* 数据 */}
         <section className="mt-14">
-          <h2 className="mb-1 font-serif text-[20px] font-semibold">数据</h2>
-          <p className="mb-5 text-[12.5px] text-ink-3">作品保存在云端，并在这台设备的浏览器里留有一份本地副本，离线时也能继续写，恢复网络后自动同步。仍建议定期备份。</p>
+          <h2 className="mb-1 font-serif text-fs-xl font-semibold">数据</h2>
+          <p className="mb-5 text-fs-xs text-ink-3">作品保存在云端，并在这台设备的浏览器里留有一份本地副本，离线时也能继续写，恢复网络后自动同步。仍建议定期备份。</p>
           <div className="surface flex flex-wrap items-center gap-3 rounded-2xl p-5">
             <StorageInfo />
             <div className="ml-auto flex gap-2">
@@ -467,7 +467,7 @@ export default function Settings() {
           <RescuedList items={rescued ?? []} />
         </section>
 
-        <div className="mt-10 flex items-center gap-2 text-[12px] text-ink-3">
+        <div className="mt-10 flex items-center gap-2 text-fs-xs text-ink-3">
           <KeyRound className="size-3.5" />
           快捷键：⌘K 命令面板 · ⌘J 续写 · ⌘. 专注模式 · ⌘S 保存 · Tab 接受续写
         </div>
@@ -480,8 +480,8 @@ function Row({ title, hint, children }: { title: string; hint: string; children:
   return (
     <div className="flex flex-wrap items-center gap-4 px-5 py-4">
       <div className="min-w-0 flex-1">
-        <div className="text-[14px] font-medium">{title}</div>
-        <div className="text-[12px] text-ink-3">{hint}</div>
+        <div className="text-fs-base font-medium">{title}</div>
+        <div className="text-fs-xs text-ink-3">{hint}</div>
       </div>
       {children}
     </div>
@@ -499,11 +499,11 @@ function RescuedList({ items }: { items: Awaited<ReturnType<typeof rawRescued>> 
   const text = (row: Record<string, unknown>) => (typeof row.content === 'string' ? row.content : JSON.stringify(row, null, 2));
   return (
     <div className="mt-6">
-      <h3 className="font-serif text-[16px] font-semibold">未能保存的修改 <span className="text-ink-3 tabular-nums">{items.length}</span></h3>
-      <p className="mb-3 text-[12px] text-ink-3">这些修改被服务器拒绝（权限不足、章节被他人锁定或已被改动），内容暂存在这里，可以复制出来再处理。</p>
+      <h3 className="font-serif text-fs-md font-semibold">未能保存的修改 <span className="text-ink-3 tabular-nums">{items.length}</span></h3>
+      <p className="mb-3 text-fs-xs text-ink-3">这些修改被服务器拒绝（权限不足、章节被他人锁定或已被改动），内容暂存在这里，可以复制出来再处理。</p>
       <ul className="space-y-2">
         {items.map((it) => (
-          <li key={it.id} className="surface flex flex-wrap items-center gap-3 rounded-xl px-4 py-3 text-[12.5px]">
+          <li key={it.id} className="surface flex flex-wrap items-center gap-3 rounded-xl px-4 py-3 text-fs-xs">
             <Badge tone="gold">{it.table}</Badge>
             <span className="min-w-0 flex-1 truncate font-medium">{label(it.row)}</span>
             <span className="text-ink-3">{it.reason}</span>

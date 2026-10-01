@@ -330,7 +330,7 @@ export function WritingScene({ className }: { className?: string }) {
     <div ref={box} className={cx('relative select-none', className)}>
       <Scene t={t} still={reduced} />
       {prefersReduced && !forcePlay && (
-        <button type="button" onClick={() => setForcePlay(true)} className="absolute bottom-1 left-1 flex items-center gap-1.5 rounded-full border border-line bg-paper-2/80 px-3 py-1.5 text-[12px] text-ink-2 backdrop-blur transition hover:border-line-2 hover:text-ink">
+        <button type="button" onClick={() => setForcePlay(true)} className="absolute bottom-1 left-1 flex items-center gap-1.5 rounded-full border border-line bg-paper-2/80 px-3 py-1.5 text-fs-xs text-ink-2 backdrop-blur transition hover:border-line-2 hover:text-ink">
           <Play className="size-3.5" />
           播放动画
         </button>
@@ -339,7 +339,7 @@ export function WritingScene({ className }: { className?: string }) {
         type="button"
         onClick={toggle}
         aria-pressed={sound}
-        className="absolute right-1 bottom-1 flex items-center gap-1.5 rounded-full border border-line bg-paper-2/80 px-3 py-1.5 text-[12px] text-ink-2 backdrop-blur transition hover:border-line-2 hover:text-ink"
+        className="absolute right-1 bottom-1 flex items-center gap-1.5 rounded-full border border-line bg-paper-2/80 px-3 py-1.5 text-fs-xs text-ink-2 backdrop-blur transition hover:border-line-2 hover:text-ink"
       >
         {sound ? <Volume2 className="size-3.5" /> : <VolumeX className="size-3.5" />}
         {sound ? '声音已开' : soundPreferred() ? '点一下恢复声音' : '开启声音'}

@@ -26,19 +26,21 @@ type Variant = 'ink' | 'seal' | 'ghost' | 'outline' | 'soft' | 'danger';
 type Size = 'xs' | 'sm' | 'md' | 'lg';
 
 const VARIANTS: Record<Variant, string> = {
-  ink: 'bg-ink text-paper hover:bg-ink/88 shadow-[0_1px_0_rgba(255,255,255,.08)_inset,0_6px_16px_-6px_rgb(var(--shadow)/.4)]',
-  seal: 'bg-seal text-[#fff6f0] hover:bg-seal-2 shadow-[0_1px_0_rgba(255,255,255,.18)_inset,0_8px_20px_-8px_var(--seal)]',
-  ghost: 'text-ink-2 hover:text-ink hover:bg-ink/[.05]',
-  outline: 'border border-line-2 text-ink hover:border-ink/40 hover:bg-paper-2',
-  soft: 'bg-ink/[.05] text-ink hover:bg-ink/[.09]',
+  // 主行动：朱砂渐变 + 顶部高光 + 外发光；悬停时更亮、略微上浮
+  seal: 'bg-[image:var(--grad-seal)] text-[#fff6f0] shadow-[inset_0_1px_0_rgb(255_255_255/.28),0_1px_2px_rgb(0_0_0/.2),0_10px_24px_-10px_var(--seal)] hover:brightness-110 hover:-translate-y-px hover:shadow-[inset_0_1px_0_rgb(255_255_255/.32),0_1px_2px_rgb(0_0_0/.2),0_14px_30px_-10px_var(--seal)]',
+  // 次要强调：墨色实心，带细高光
+  ink: 'bg-ink text-paper shadow-[inset_0_1px_0_rgb(255_255_255/.14),0_8px_20px_-10px_rgb(var(--shadow)/.55)] hover:bg-ink/90 hover:-translate-y-px',
+  ghost: 'text-ink-2 hover:text-ink hover:bg-ink/[.06]',
+  outline: 'border border-line-2 bg-[color:var(--surface-1)]/50 text-ink backdrop-blur-sm hover:border-ink/35 hover:bg-[color:var(--surface-1)] hover:-translate-y-px hover:shadow-[var(--elev-1)]',
+  soft: 'bg-ink/[.06] text-ink hover:bg-ink/[.1]',
   danger: 'text-seal hover:bg-seal/10',
 };
 
 const SIZES: Record<Size, string> = {
-  xs: 'h-7 px-2.5 text-xs gap-1 rounded-lg',
-  sm: 'h-8 px-3 text-[13px] gap-1.5 rounded-lg',
-  md: 'h-10 px-4 text-sm gap-2 rounded-xl',
-  lg: 'h-12 px-6 text-[15px] gap-2.5 rounded-2xl',
+  xs: 'h-7 px-2.5 text-fs-xs gap-1 rounded-lg',
+  sm: 'h-8 px-3 text-fs-sm gap-1.5 rounded-lg',
+  md: 'h-10 px-4 text-fs-base gap-2 rounded-xl',
+  lg: 'h-12 px-6 text-fs-md gap-2.5 rounded-2xl',
 };
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -57,7 +59,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
       ref={ref}
       disabled={disabled || loading}
       className={cx(
-        'relative inline-flex shrink-0 select-none items-center justify-center font-medium whitespace-nowrap transition-all duration-200 ease-[var(--ease-silk)] active:scale-[.97] disabled:opacity-45 disabled:active:scale-100',
+        'relative inline-flex shrink-0 select-none items-center justify-center font-medium whitespace-nowrap transition-all duration-[var(--dur-2)] ease-[var(--ease-silk)] active:translate-y-0 active:scale-[.97] disabled:pointer-events-none disabled:opacity-45',
         VARIANTS[variant],
         SIZES[size],
         className,
@@ -137,7 +139,7 @@ export function Field({ label, hint, children, className, group }: { label: stri
       <span id={id} className="text-xs font-medium tracking-wide text-ink-2">
         {label}
       </span>
-      {hint && <span className="text-[11px] text-ink-3">{hint}</span>}
+      {hint && <span className="text-fs-2xs text-ink-3">{hint}</span>}
     </span>
   );
   if (group) {
@@ -178,16 +180,16 @@ export function Toggle({ checked, onChange, label }: { checked: boolean; onChang
 export function Segmented<T extends string | number>({ value, options, onChange, size = 'md' }: { value: T; options: { value: T; label: ReactNode }[]; onChange: (v: T) => void; size?: 'sm' | 'md' }) {
   const id = useId();
   return (
-    <div className={cx('inline-flex rounded-xl bg-ink/[.05] p-1', size === 'sm' && 'rounded-lg p-0.5')} role="radiogroup">
+    <div className={cx('inline-flex rounded-xl border border-line bg-ink/[.04] p-1 shadow-[inset_0_1px_2px_rgb(var(--shadow)/.06)]', size === 'sm' && 'rounded-lg p-0.5')} role="radiogroup">
       {options.map((o) => (
         <button
           key={String(o.value)}
           role="radio"
           aria-checked={o.value === value}
           onClick={() => onChange(o.value)}
-          className={cx('relative rounded-lg px-3 font-medium transition-colors', size === 'sm' ? 'h-7 text-xs' : 'h-8 text-[13px]', o.value === value ? 'text-ink' : 'text-ink-3 hover:text-ink-2')}
+          className={cx('relative rounded-lg px-3 font-medium transition-colors', size === 'sm' ? 'h-7 text-xs' : 'h-8 text-fs-sm', o.value === value ? 'text-ink' : 'text-ink-3 hover:text-ink-2')}
         >
-          {o.value === value && <motion.span layoutId={`seg-${id}`} className="absolute inset-0 rounded-lg bg-paper-2 shadow-[var(--shadow-card)]" transition={{ type: 'spring', stiffness: 500, damping: 38 }} />}
+          {o.value === value && <motion.span layoutId={`seg-${id}`} className="absolute inset-0 rounded-lg border border-line bg-[color:var(--surface-2)] shadow-[var(--elev-1)]" transition={{ type: 'spring', stiffness: 500, damping: 38 }} />}
           <span className="relative">{o.label}</span>
         </button>
       ))}
@@ -206,11 +208,11 @@ export function Tabs<T extends string>({ value, tabs, onChange, className }: { v
           role="tab"
           aria-selected={t.value === value}
           onClick={() => onChange(t.value)}
-          className={cx('relative flex h-10 items-center gap-1.5 px-3 text-[13px] font-medium transition-colors', t.value === value ? 'text-ink' : 'text-ink-3 hover:text-ink-2')}
+          className={cx('relative flex h-10 items-center gap-1.5 px-3 text-fs-sm font-medium transition-colors', t.value === value ? 'text-ink' : 'text-ink-3 hover:text-ink-2')}
         >
           {t.label}
-          {!!t.badge && <span className="rounded-full bg-seal px-1.5 text-[10px] leading-4 text-white">{t.badge}</span>}
-          {t.value === value && <motion.span layoutId={`tab-${id}`} className="absolute inset-x-2 -bottom-px h-[2px] rounded-full bg-seal" transition={{ type: 'spring', stiffness: 500, damping: 40 }} />}
+          {!!t.badge && <span className="rounded-full bg-seal px-1.5 text-fs-2xs leading-4 text-white">{t.badge}</span>}
+          {t.value === value && <motion.span layoutId={`tab-${id}`} className="absolute inset-x-2 -bottom-px h-[2px] rounded-full bg-seal shadow-[0_0_10px_var(--seal)]" transition={{ type: 'spring', stiffness: 500, damping: 40 }} />}
         </button>
       ))}
     </div>
@@ -238,25 +240,25 @@ export function Chip({ active, color, children, onClick, className }: { active?:
 
 export function Badge({ children, tone = 'neutral', className }: { children: ReactNode; tone?: 'neutral' | 'seal' | 'jade' | 'gold' | 'indigo'; className?: string }) {
   const tones = {
-    neutral: 'bg-ink/[.06] text-ink-2',
-    seal: 'bg-seal/12 text-seal',
-    jade: 'bg-jade/12 text-jade',
-    gold: 'bg-gold/14 text-gold',
-    indigo: 'bg-indigo/12 text-indigo',
+    neutral: 'bg-ink/[.06] text-ink-2 ring-1 ring-inset ring-line',
+    seal: 'bg-seal/10 text-seal ring-1 ring-inset ring-seal/25',
+    jade: 'bg-jade/10 text-jade ring-1 ring-inset ring-jade/25',
+    gold: 'bg-gold/12 text-gold ring-1 ring-inset ring-gold/30',
+    indigo: 'bg-indigo/10 text-indigo ring-1 ring-inset ring-indigo/25',
   };
-  return <span className={cx('inline-flex h-5 items-center gap-1 rounded-md px-1.5 text-[11px] font-medium', tones[tone], className)}>{children}</span>;
+  return <span className={cx('inline-flex h-5 items-center gap-1 rounded-full px-2 text-fs-2xs font-medium', tones[tone], className)}>{children}</span>;
 }
 
 export function Kbd({ children }: { children: ReactNode }) {
-  return <kbd className="inline-flex h-5 min-w-5 items-center justify-center rounded border border-line-2 bg-paper-2 px-1 font-mono text-[10px] text-ink-2 shadow-[0_1px_0_var(--line-2)]">{children}</kbd>;
+  return <kbd className="inline-flex h-5 min-w-5 items-center justify-center rounded-md border border-line-2 bg-[color:var(--surface-2)] px-1 font-mono text-fs-2xs text-ink-2 shadow-[0_1px_0_var(--line-2)]">{children}</kbd>;
 }
 
 export function SectionTitle({ eyebrow, title, children, className }: { eyebrow?: string; title: ReactNode; children?: ReactNode; className?: string }) {
   return (
     <div className={cx('flex flex-wrap items-end justify-between gap-4', className)}>
       <div>
-        {eyebrow && <div className="mb-1.5 text-[11px] font-medium tracking-[.25em] text-seal">{eyebrow}</div>}
-        <h1 className="font-serif text-[28px] leading-tight font-semibold tracking-wide text-ink">{title}</h1>
+        {eyebrow && <div className="mb-1.5 text-fs-2xs font-medium tracking-[.28em] text-seal">{eyebrow}</div>}
+        <h1 className="font-serif text-fs-2xl leading-tight font-semibold tracking-wide text-ink">{title}</h1>
       </div>
       {children && <div className="flex items-center gap-2">{children}</div>}
     </div>
@@ -266,7 +268,7 @@ export function SectionTitle({ eyebrow, title, children, className }: { eyebrow?
 export function Empty({ icon, title, children, action }: { icon?: ReactNode; title: string; children?: ReactNode; action?: ReactNode }) {
   return (
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col items-center justify-center px-6 py-16 text-center">
-      {icon && <div className="mb-4 flex size-14 items-center justify-center rounded-2xl border border-dashed border-line-2 text-ink-3">{icon}</div>}
+      {icon && <div className="mb-4 flex size-14 items-center justify-center rounded-2xl border border-dashed border-line-2 bg-[color:var(--surface-1)]/60 text-ink-3 shadow-[var(--elev-1)]">{icon}</div>}
       <div className="font-serif text-lg text-ink">{title}</div>
       {children && <div className="mt-2 max-w-sm text-sm leading-relaxed text-ink-3">{children}</div>}
       {action && <div className="mt-6">{action}</div>}
@@ -296,11 +298,11 @@ export function Modal({ open, onClose, title, children, width = 560, footer }: {
     <AnimatePresence>
       {open && (
         <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto px-4 pt-[10vh] pb-10">
-          <motion.div className="fixed inset-0 bg-[#140f08]/35 backdrop-blur-[3px]" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} />
+          <motion.div className="fixed inset-0 bg-[color:var(--scrim)] backdrop-blur-[6px]" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} />
           <motion.div
             role="dialog"
             aria-modal="true"
-            className="surface relative w-full overflow-hidden rounded-2xl shadow-[var(--shadow-float)]"
+            className="surface gborder relative w-full overflow-hidden rounded-3xl shadow-[var(--elev-3)] after:opacity-100"
             style={{ maxWidth: width }}
             initial={{ opacity: 0, y: 16, scale: 0.97 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -309,7 +311,7 @@ export function Modal({ open, onClose, title, children, width = 560, footer }: {
           >
             {title && (
               <div className="flex items-center justify-between border-b border-line px-5 py-3.5">
-                <div className="font-serif text-[17px] font-semibold">{title}</div>
+                <div className="font-serif text-fs-lg font-semibold">{title}</div>
                 <IconButton label="关闭" size="sm" onClick={onClose}>
                   <X className="size-4" />
                 </IconButton>
@@ -331,11 +333,11 @@ export function Sheet({ open, onClose, title, children, width = 520, subtitle }:
     <AnimatePresence>
       {open && (
         <div className="fixed inset-0 z-50">
-          <motion.div className="absolute inset-0 bg-[#140f08]/20 backdrop-blur-[1px]" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} />
+          <motion.div className="absolute inset-0 bg-[color:var(--scrim)] backdrop-blur-[3px]" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} />
           <motion.aside
             role="dialog"
             aria-modal="true"
-            className="absolute inset-y-2 right-2 flex flex-col overflow-hidden rounded-2xl border border-line bg-paper shadow-[var(--shadow-float)]"
+            className="glass absolute inset-y-2 right-2 flex flex-col overflow-hidden rounded-3xl shadow-[var(--elev-3)]"
             style={{ width: `min(${width}px, calc(100vw - 16px))` }}
             initial={{ x: '105%' }}
             animate={{ x: 0 }}
@@ -490,7 +492,7 @@ export function Menu({ trigger, items, align = 'right', className }: { trigger: 
                     setOpen(false);
                     it.onClick();
                   }}
-                  className={cx('flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-[13px] transition-colors [&>svg]:size-4', it.danger ? 'text-seal hover:bg-seal/10' : 'text-ink-2 hover:bg-ink/[.05] hover:text-ink')}
+                  className={cx('flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-fs-sm transition-colors [&>svg]:size-4', it.danger ? 'text-seal hover:bg-seal/10' : 'text-ink-2 hover:bg-ink/[.05] hover:text-ink')}
                 >
                   {it.icon}
                   {it.label}

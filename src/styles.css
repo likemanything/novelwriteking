@@ -5,44 +5,71 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
-/* ───────────── 设计令牌：宣纸（日）/ 夜墨（夜） ───────────── */
+/* ───────────── 设计令牌：墨玉鎏金（见 docs/design-system.md） ───────────── */
 :root {
-  --paper: #f3eee3;
-  --paper-2: #fbf8f1;
-  --paper-3: #e9e2d2;
-  --ink: #1f1c18;
-  --ink-2: #5b5449;
-  --ink-3: #948b7c;
-  --line: rgba(60, 42, 20, 0.11);
-  --line-2: rgba(60, 42, 20, 0.2);
+  /* 语义层 */
+  --bg: #f1ecdf;
+  --surface-1: #fbf8f1;
+  --surface-2: #ffffff;
+  --surface-sunk: #e8e1d0;
+  --text-1: #1f1c18;
+  --text-2: #554e43;
+  --text-3: #6f6657; /* 对 bg 4.89:1、对 surface-1 5.33:1（AA） */
+  --border-1: rgba(60, 42, 20, 0.11);
+  --border-2: rgba(60, 42, 20, 0.2);
   --seal: #c23a2b;
   --seal-2: #9e2a1e;
-  --gold: #b07f22;
-  --jade: #3f8a6b;
+  --gold: #946614; /* 作文字用时对 bg 4.6:1 */
+  --gold-bright: #d9a93f;
+  --jade: #2f7a5b;
   --indigo: #35607f;
+  /* 旧名称保留为别名 */
+  --paper: var(--bg);
+  --paper-2: var(--surface-1);
+  --paper-3: var(--surface-sunk);
+  --ink: var(--text-1);
+  --ink-2: var(--text-2);
+  --ink-3: var(--text-3);
+  --line: var(--border-1);
+  --line-2: var(--border-2);
+  /* 光与影 */
   --shadow: 32 22 8;
+  --hi: rgb(255 255 255 / 0.75);
+  --glow: rgba(194, 58, 43, 0.14);
+  --glass-bg: color-mix(in oklab, var(--surface-1) 74%, transparent);
+  --scrim: rgb(20 14 6 / 0.38);
   --grain-opacity: 0.5;
-  --glow: rgba(194, 58, 43, 0.12);
+  --aurora-a: rgb(194 58 43 / 0.1);
+  --aurora-b: rgb(217 169 63 / 0.13);
+  --aurora-c: rgb(53 96 127 / 0.09);
   color-scheme: light;
 }
 
 .dark {
-  --paper: #101216;
-  --paper-2: #171a20;
-  --paper-3: #20242c;
-  --ink: #ece5d8;
-  --ink-2: #aaa294;
-  --ink-3: #6e685e;
-  --line: rgba(255, 240, 215, 0.08);
-  --line-2: rgba(255, 240, 215, 0.16);
-  --seal: #e0513f;
-  --seal-2: #f06a55;
-  --gold: #d9aa4f;
-  --jade: #5fb08c;
-  --indigo: #6e9cc2;
+  --bg: #0b0d11;
+  --surface-1: #12151b;
+  --surface-2: #181c24;
+  --surface-sunk: #0f1217;
+  --text-1: #ece5d8;
+  --text-2: #b4ac9c;
+  --text-3: #948d81; /* 对 bg 5.87:1 */
+  --border-1: rgba(255, 240, 215, 0.08);
+  --border-2: rgba(255, 240, 215, 0.17);
+  --seal: #e45a47;
+  --seal-2: #f2745f;
+  --gold: #e0b45a;
+  --gold-bright: #f1cd7e;
+  --jade: #62b793;
+  --indigo: #7aa6cc;
   --shadow: 0 0 0;
+  --hi: rgb(255 255 255 / 0.05);
+  --glow: rgba(228, 90, 71, 0.2);
+  --glass-bg: color-mix(in oklab, var(--surface-1) 62%, transparent);
+  --scrim: rgb(0 0 0 / 0.55);
   --grain-opacity: 0.35;
-  --glow: rgba(224, 81, 63, 0.16);
+  --aurora-a: rgb(228 90 71 / 0.17);
+  --aurora-b: rgb(224 180 90 / 0.12);
+  --aurora-c: rgb(90 130 190 / 0.16);
   color-scheme: dark;
 }
 
@@ -58,18 +85,60 @@
   --color-seal: var(--seal);
   --color-seal-2: var(--seal-2);
   --color-gold: var(--gold);
+  --color-gold-bright: var(--gold-bright);
   --color-jade: var(--jade);
   --color-indigo: var(--indigo);
+  --color-surface: var(--surface-1);
+  --color-surface-2: var(--surface-2);
   --font-serif: 'Noto Serif SC', 'Songti SC', 'STSong', 'SimSun', serif;
   --font-sans: 'PingFang SC', 'HarmonyOS Sans SC', 'MiSans', 'Microsoft YaHei', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-mono: 'SF Mono', 'JetBrains Mono', ui-monospace, Menlo, monospace;
+
+  /* 字阶：全站只用这 9 档（text-fs-*） */
+  --text-fs-2xs: 11px;
+  --text-fs-xs: 12px;
+  --text-fs-sm: 13px;
+  --text-fs-base: 14px;
+  --text-fs-md: 15px;
+  --text-fs-lg: 17px;
+  --text-fs-xl: 20px;
+  --text-fs-2xl: 26px;
+  --text-fs-display: clamp(38px, 6vw, 76px);
+}
+
+:root {
+  /* 圆角 */
+  --r-sm: 8px;
+  --r-md: 12px;
+  --r-lg: 16px;
+  --r-xl: 22px;
+  /* 海拔 */
+  --elev-1: inset 0 1px 0 var(--hi), 0 1px 2px rgb(var(--shadow) / 0.06), 0 6px 16px -8px rgb(var(--shadow) / 0.14);
+  --elev-2: inset 0 1px 0 var(--hi), 0 2px 4px rgb(var(--shadow) / 0.06), 0 14px 30px -12px rgb(var(--shadow) / 0.22);
+  --elev-3: inset 0 1px 0 var(--hi), 0 2px 6px rgb(var(--shadow) / 0.08), 0 28px 70px -22px rgb(var(--shadow) / 0.38);
+  --elev-glow: 0 0 0 1px color-mix(in oklab, var(--seal) 40%, transparent), 0 10px 30px -8px color-mix(in oklab, var(--seal) 55%, transparent);
+  --shadow-card: var(--elev-1);
+  --shadow-float: var(--elev-3);
+  /* 渐变 */
+  --grad-seal: linear-gradient(180deg, color-mix(in oklab, var(--seal) 80%, white) 0%, var(--seal) 42%, var(--seal-2) 100%);
+  --grad-gilt: linear-gradient(135deg, #f0d28a, #c9962f 50%, #f0d28a);
+  --ring-glow: 0 0 0 4px var(--glow);
+  /* 动效 */
+  --dur-1: 120ms;
+  --dur-2: 220ms;
+  --dur-3: 420ms;
   --ease-silk: cubic-bezier(0.22, 1, 0.36, 1);
-  --shadow-float: 0 1px 1px rgb(var(--shadow) / 0.04), 0 8px 24px -6px rgb(var(--shadow) / 0.16), 0 24px 60px -20px rgb(var(--shadow) / 0.22);
-  --shadow-card: 0 1px 0 rgb(var(--shadow) / 0.03), 0 2px 8px -2px rgb(var(--shadow) / 0.08);
+  --ease-snap: cubic-bezier(0.3, 1.4, 0.5, 1);
   --animate-breathe: breathe 2.4s ease-in-out infinite;
   --animate-caret: caret 1.05s steps(1) infinite;
   --animate-shimmer: shimmer 2.2s linear infinite;
   --animate-spin-slow: spin 14s linear infinite;
+  --animate-drift: drift 48s ease-in-out infinite alternate;
+}
+
+@keyframes drift {
+  from { transform: translate3d(-2%, -1%, 0) scale(1); }
+  to { transform: translate3d(2%, 2%, 0) scale(1.06); }
 }
 
 @keyframes breathe {
@@ -97,12 +166,27 @@ body,
 }
 
 body {
-  background: var(--paper);
-  color: var(--ink);
+  background: var(--bg);
+  color: var(--text-1);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
   transition: background-color 0.5s var(--ease-silk), color 0.5s var(--ease-silk);
+}
+
+/* 背景极光：三团极低饱和的光晕缓慢漂移，给整个界面一点「有光源」的纵深（日间几乎不可见，夜间更浓） */
+body::after {
+  content: '';
+  position: fixed;
+  inset: -12%;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(48% 42% at 12% 6%, var(--aurora-a), transparent 70%),
+    radial-gradient(44% 40% at 88% 0%, var(--aurora-b), transparent 70%),
+    radial-gradient(50% 46% at 70% 100%, var(--aurora-c), transparent 70%);
+  animation: var(--animate-drift);
+  will-change: transform;
 }
 
 /* 宣纸纤维纹理：一层固定的噪点，让屏幕有纸感而非塑料感 */
@@ -127,9 +211,9 @@ body:where(.dark *)::before {
 }
 
 :focus-visible {
-  outline: 2px solid color-mix(in oklab, var(--seal) 70%, transparent);
+  outline: 2px solid color-mix(in oklab, var(--seal) 75%, transparent);
   outline-offset: 2px;
-  border-radius: 6px;
+  box-shadow: var(--ring-glow);
 }
 
 * {
@@ -147,18 +231,72 @@ button:disabled {
 /* ───────────── 通用组件样式 ───────────── */
 @layer components {
   .surface {
-    background: var(--paper-2);
-    border: 1px solid var(--line);
-    box-shadow: var(--shadow-card);
+    position: relative;
+    isolation: isolate;
+    background: var(--surface-1);
+    border: 1px solid var(--border-1);
+    box-shadow: var(--elev-1);
+  }
+  /* 玻璃层：顶栏、侧栏、浮层。内容透出来一点，才有「在上面」的感觉 */
+  .glass {
+    background: var(--glass-bg);
+    -webkit-backdrop-filter: blur(20px) saturate(1.5);
+    backdrop-filter: blur(20px) saturate(1.5);
+    border: 1px solid var(--border-1);
+  }
+  /* 聚光：鼠标经过时，卡片里有一团跟着光标走的柔光（--mx/--my 由 main.tsx 里的一个监听器写入） */
+  [data-spot],
+  .surface {
+    position: relative;
+    isolation: isolate;
+  }
+  [data-spot]::before,
+  .surface::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity var(--dur-3) var(--ease-silk);
+    background: radial-gradient(360px circle at var(--mx, 50%) var(--my, 0%), color-mix(in oklab, var(--seal) 13%, transparent), transparent 62%);
+  }
+  [data-spot]:hover::before,
+  .surface:hover::before {
+    opacity: 1;
+  }
+  /* 渐变发丝线：聚焦或悬停时从朱砂过渡到鎏金 */
+  .gborder {
+    position: relative;
+  }
+  .gborder::after {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    padding: 1px;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity var(--dur-2) var(--ease-silk);
+    background: linear-gradient(135deg, color-mix(in oklab, var(--seal) 70%, transparent), transparent 38%, color-mix(in oklab, var(--gold-bright) 60%, transparent));
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+  }
+  .gborder:hover::after,
+  .gborder:focus-within::after {
+    opacity: 1;
   }
   .hairline {
     border-color: var(--line);
   }
   .field {
     width: 100%;
-    background: color-mix(in oklab, var(--paper-2) 70%, transparent);
-    border: 1px solid var(--line);
-    border-radius: 10px;
+    background: color-mix(in oklab, var(--surface-1) 78%, transparent);
+    border: 1px solid var(--border-1);
+    box-shadow: inset 0 1px 2px rgb(var(--shadow) / 0.05);
+    border-radius: var(--r-md);
     padding: 0.5rem 0.75rem;
     color: var(--ink);
     font-size: 0.875rem;
@@ -173,9 +311,9 @@ button:disabled {
   }
   .field:focus {
     outline: none;
-    border-color: color-mix(in oklab, var(--seal) 55%, transparent);
-    box-shadow: 0 0 0 4px var(--glow);
-    background: var(--paper-2);
+    border-color: color-mix(in oklab, var(--seal) 60%, transparent);
+    box-shadow: var(--ring-glow);
+    background: var(--surface-1);
   }
   .field-bare {
     width: 100%;

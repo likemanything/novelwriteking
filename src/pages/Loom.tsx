@@ -153,7 +153,7 @@ export default function Loom() {
             ]}
           />
         </SectionTitle>
-        <p className="mt-2 max-w-2xl text-[13.5px] leading-relaxed text-ink-2">
+        <p className="mt-2 max-w-2xl text-fs-sm leading-relaxed text-ink-2">
           每一列是一章，每一行是一条{mode === 'threads' ? '故事线' : '人物'}。圆点表示这一章{mode === 'threads' ? '推进了这条故事线' : '有这个人物出场'}，长时间没有圆点就说明它被冷落了。点击左侧名称可以单独查看。
         </p>
 
@@ -164,7 +164,7 @@ export default function Loom() {
             <div className="relative flex overflow-x-auto" onMouseLeave={() => setHover(null)}>
               {/* 左侧名称（固定） */}
               <div className="sticky left-0 z-10 shrink-0 border-r border-line bg-paper-2" style={{ width: LABEL }}>
-                <div style={{ height: HEAD }} className="flex items-end px-5 pb-3 text-[11px] tracking-[.2em] text-ink-3">
+                <div style={{ height: HEAD }} className="flex items-end px-5 pb-3 text-fs-2xs tracking-[.2em] text-ink-3">
                   {mode === 'threads' ? '故事线' : '人物'} · 章节
                 </div>
                 {rows.map((r) => {
@@ -180,8 +180,8 @@ export default function Loom() {
                     >
                       <span className="h-6 w-1.5 shrink-0 rounded-full" style={{ background: r.color }} />
                       <span className="min-w-0">
-                        <span className={cx('block truncate text-[13.5px] font-medium', r.done && 'text-ink-3 line-through decoration-ink/30')}>{r.name}</span>
-                        <span className="block text-[11px] text-ink-3">
+                        <span className={cx('block truncate text-fs-sm font-medium', r.done && 'text-ink-3 line-through decoration-ink/30')}>{r.name}</span>
+                        <span className="block text-fs-2xs text-ink-3">
                           {r.sub} · {count} 章{r.done ? ' · 已完结' : ''}
                         </span>
                       </span>
@@ -307,17 +307,17 @@ export default function Loom() {
               <>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
-                    <span className="font-serif text-[12.5px] text-seal">第{chineseNumber(hovered.index)}章</span>
-                    <span className="truncate font-serif text-[16px] font-semibold">{hovered.title}</span>
+                    <span className="font-serif text-fs-xs text-seal">第{chineseNumber(hovered.index)}章</span>
+                    <span className="truncate font-serif text-fs-md font-semibold">{hovered.title}</span>
                     <Badge>{STATUS_META[hovered.status].label}</Badge>
                   </div>
-                  <p className="mt-0.5 truncate text-[12.5px] text-ink-3">{hovered.summary || hovered.blueprint.goal || '还没有本章目标'}</p>
+                  <p className="mt-0.5 truncate text-fs-xs text-ink-3">{hovered.summary || hovered.blueprint.goal || '还没有本章目标'}</p>
                 </div>
                 <div className="hidden max-w-[40%] flex-wrap justify-end gap-1.5 md:flex">
                   {rows
                     .filter((r) => r.on[hover!])
                     .map((r) => (
-                      <span key={r.id} className="inline-flex h-6 items-center gap-1.5 rounded-full border border-line px-2 text-[11.5px] text-ink-2">
+                      <span key={r.id} className="inline-flex h-6 items-center gap-1.5 rounded-full border border-line px-2 text-fs-xs text-ink-2">
                         <span className="size-1.5 rounded-full" style={{ background: r.color }} />
                         {r.name}
                       </span>
@@ -328,14 +328,14 @@ export default function Loom() {
                 </Button>
               </>
             ) : (
-              <span className="text-[12.5px] text-ink-3">把鼠标移到某一章上查看详情，点击进入写作台。</span>
+              <span className="text-fs-xs text-ink-3">把鼠标移到某一章上查看详情，点击进入写作台。</span>
             )}
           </div>
         </div>
 
         {/* 织工的提醒 */}
         <section className="mt-8">
-          <h2 className="mb-3 text-[11px] tracking-[.3em] text-seal">结构提醒</h2>
+          <h2 className="mb-3 text-fs-2xs tracking-[.3em] text-seal">结构提醒</h2>
           {insights.length ? (
             <div className="grid gap-3 md:grid-cols-2">
               {insights.map((it, i) => (
@@ -343,7 +343,7 @@ export default function Loom() {
                   <span className={cx('mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-lg', it.tone === 'warn' ? 'bg-gold/15 text-gold' : 'bg-indigo/12 text-indigo')}>
                     {it.tone === 'warn' ? <AlertTriangle className="size-3.5" /> : <Sparkles className="size-3.5" />}
                   </span>
-                  <p className="flex-1 text-[13px] leading-relaxed text-ink-2">{it.text}</p>
+                  <p className="flex-1 text-fs-sm leading-relaxed text-ink-2">{it.text}</p>
                   <Button variant="ghost" size="xs" onClick={() => navigate(`${base}/outline`)}>
                     调整 <ArrowRight className="size-3" />
                   </Button>
@@ -351,7 +351,7 @@ export default function Loom() {
               ))}
             </div>
           ) : (
-            <p className="text-[13px] text-ink-3">各条线分布均匀，没有被冷落的。</p>
+            <p className="text-fs-sm text-ink-3">各条线分布均匀，没有被冷落的。</p>
           )}
         </section>
       </div>

@@ -33,11 +33,11 @@ function CreateCanvas({ chapterCount, onCreate }: { chapterCount: number; onCrea
   return (
     <div className="h-full overflow-y-auto">
       <div className="mx-auto max-w-3xl px-8 pt-12 pb-24">
-        <div className="mb-1 text-[11px] tracking-[.3em] text-seal">短剧</div>
-        <h1 className="font-serif text-[28px] font-semibold">把这部小说，改成一部短剧</h1>
-        <p className="mt-2 max-w-xl text-[13.5px] leading-relaxed text-ink-2">选好范围和剧型，墨织会铺开一条完整的改编流水线。每一步都可以看、可以改、可以重跑；剧本里的每场戏都能追溯到小说原文。</p>
+        <div className="mb-1 text-fs-2xs tracking-[.3em] text-seal">短剧</div>
+        <h1 className="font-serif text-fs-2xl font-semibold">把这部小说，改成一部短剧</h1>
+        <p className="mt-2 max-w-xl text-fs-sm leading-relaxed text-ink-2">选好范围和剧型，墨织会铺开一条完整的改编流水线。每一步都可以看、可以改、可以重跑；剧本里的每场戏都能追溯到小说原文。</p>
 
-        <ol className="mt-8 flex flex-wrap items-center gap-2 text-[12.5px] text-ink-2">
+        <ol className="mt-8 flex flex-wrap items-center gap-2 text-fs-xs text-ink-2">
           {STEPS.map((s, i) => (
             <li key={s} className="flex items-center gap-2">
               <span className="rounded-full bg-seal/10 px-3 py-1 text-seal">{s}</span>
@@ -60,7 +60,7 @@ function CreateCanvas({ chapterCount, onCreate }: { chapterCount: number; onCrea
           <Field label="剧型" hint={GENRES.find((g) => g.value === p.genre)?.hint}>
             <div className="flex flex-wrap gap-1.5">
               {GENRES.map((g) => (
-                <button key={g.value} type="button" onClick={() => setP({ ...p, genre: g.value })} className={cx('rounded-full border px-3.5 py-1.5 text-[12.5px] transition', p.genre === g.value ? 'border-seal/50 bg-seal/[.07] text-seal' : 'border-line text-ink-2 hover:border-line-2')}>
+                <button key={g.value} type="button" onClick={() => setP({ ...p, genre: g.value })} className={cx('rounded-full border px-3.5 py-1.5 text-fs-xs transition', p.genre === g.value ? 'border-seal/50 bg-seal/[.07] text-seal' : 'border-line text-ink-2 hover:border-line-2')}>
                   {g.label}
                 </button>
               ))}
@@ -166,7 +166,18 @@ function Canvas({ project, setProject }: { project: DramaProjectDTO; setProject:
 
   const edges: Edge[] = useMemo(() => {
     const status = new Map(project.nodes.map((n) => [n.id, n.status]));
-    return project.edges.map((e) => ({ id: e.id, source: e.from, target: e.to, type: 'smoothstep', animated: status.get(e.to) === 'running', style: { stroke: 'var(--line-2)', strokeWidth: 1.6 } }));
+    return project.edges.map((e) => {
+      const t = status.get(e.to);
+      return {
+        id: e.id,
+        source: e.from,
+        target: e.to,
+        type: 'smoothstep',
+        animated: t === 'running',
+        // 流水线越往下游走越「点亮」：已完成的边是朱砂色，运行中的边带流动的虚线
+        style: { stroke: t === 'running' || t === 'done' ? 'color-mix(in oklab, var(--seal) 55%, var(--line-2))' : 'var(--line-2)', strokeWidth: t === 'done' ? 1.8 : 1.5 },
+      };
+    });
   }, [project.edges, project.nodes]);
 
   const patch = useCallback((dto: DramaProjectDTO) => setProject(dto), [setProject]);
@@ -219,8 +230,8 @@ function Canvas({ project, setProject }: { project: DramaProjectDTO; setProject:
     <div className="flex h-full flex-col">
       <header className="flex flex-wrap items-center gap-3 border-b border-line px-5 py-3">
         <Clapperboard className="size-[18px] text-seal" strokeWidth={1.8} />
-        <h1 className="font-serif text-[17px] font-semibold">短剧画布</h1>
-        <span className="text-[12px] text-ink-3">
+        <h1 className="font-serif text-fs-lg font-semibold">短剧画布</h1>
+        <span className="text-fs-xs text-ink-3">
           {project.preset.episodes} 集 · {project.preset.episodeSeconds} 秒 · {project.preset.ratio} · 已完成 {fresh}/{runnable.length}
           {stale > 0 && <span className="text-gold"> · {stale} 个已过期</span>}
           {failed > 0 && <span className="text-seal"> · {failed} 个失败</span>}
@@ -307,7 +318,7 @@ function Canvas({ project, setProject }: { project: DramaProjectDTO; setProject:
       </header>
 
       {plan.provider === 'demo' && (
-        <div className="flex items-center gap-2 border-b border-gold/30 bg-gold/10 px-5 py-2 text-[12.5px] text-ink-2" role="status">
+        <div className="flex items-center gap-2 border-b border-gold/30 bg-gold/10 px-5 py-2 text-fs-xs text-ink-2" role="status">
           <AlertTriangle className="size-4 shrink-0 text-gold" />
           还没有为「构思」环节接入模型，节点无法运行。
           <Link to="/settings" className="text-seal underline-offset-2 hover:underline">
@@ -337,7 +348,7 @@ function Canvas({ project, setProject }: { project: DramaProjectDTO; setProject:
             proOptions={{ hideAttribution: true }}
             deleteKeyCode={null}
           >
-            <Background variant={BackgroundVariant.Dots} gap={22} size={1.2} color="var(--line-2)" />
+            <Background variant={BackgroundVariant.Dots} gap={24} size={1.4} color="var(--line-2)" />
             <Controls showInteractive={false} position="bottom-left" />
             <MiniMap
               pannable
@@ -423,10 +434,10 @@ export default function Drama() {
   const { project, setProject } = useDramaProject(novel.id);
   const chapterCount = useLiveQuery(() => db.chapters.where('projectId').equals(novel.id).count(), [novel.id]) ?? 0;
 
-  if (project === undefined) return <div className="flex h-full items-center justify-center text-[13px] text-ink-3">正在加载……</div>;
+  if (project === undefined) return <div className="flex h-full items-center justify-center text-fs-sm text-ink-3">正在加载……</div>;
   if (project === null) {
-    if (!caps.write) return <div className="flex h-full items-center justify-center text-[13px] text-ink-3">还没有人为这部小说创建短剧画布。</div>;
-    if (chapterCount === 0) return <div className="flex h-full items-center justify-center text-[13px] text-ink-3">这部小说还没有章节，先写几章再来改编。</div>;
+    if (!caps.write) return <div className="flex h-full items-center justify-center text-fs-sm text-ink-3">还没有人为这部小说创建短剧画布。</div>;
+    if (chapterCount === 0) return <div className="flex h-full items-center justify-center text-fs-sm text-ink-3">这部小说还没有章节，先写几章再来改编。</div>;
     return <CreateCanvas chapterCount={chapterCount} onCreate={async (preset) => setProject((await dramaApi.create(novel.id, preset)).project)} />;
   }
   return (

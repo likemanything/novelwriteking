@@ -50,7 +50,7 @@ function Radar({ scores }: { scores: Critique['scores'] }) {
         ))}
       </svg>
       <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-        <span className="font-serif text-[22px] font-semibold text-ink tabular-nums">{avg.toFixed(1)}</span>
+        <span className="font-serif text-fs-xl font-semibold text-ink tabular-nums">{avg.toFixed(1)}</span>
       </div>
     </div>
   );
@@ -87,8 +87,8 @@ export function CritiquePanel({ critique, stale, critiquing, writing, canCritiqu
             <Quote className="size-6" />
           </span>
         </div>
-        <div className="shimmer-text font-serif text-[16px]">编辑正在逐句阅读……</div>
-        <p className="max-w-[240px] text-[12px] leading-relaxed text-ink-3">会逐条核对细纲里的情节点是否真正写出来了，并给出可勾选的修改意见。</p>
+        <div className="shimmer-text font-serif text-fs-md">编辑正在逐句阅读……</div>
+        <p className="max-w-[240px] text-fs-xs leading-relaxed text-ink-3">会逐条核对细纲里的情节点是否真正写出来了，并给出可勾选的修改意见。</p>
       </div>
     );
   }
@@ -120,7 +120,7 @@ function Report({ critique, stale, writing, canCritique, onCritique, onFlash, on
   return (
     <div className="space-y-6 p-5 pb-8">
       {stale && (
-        <div className="flex items-center gap-2 rounded-xl bg-gold/12 px-3 py-2 text-[12px] text-gold">
+        <div className="flex items-center gap-2 rounded-xl bg-gold/12 px-3 py-2 text-fs-xs text-gold">
           <RefreshCw className="size-3.5 shrink-0" />
           <span className="flex-1">这份报告针对的是较早的版本。</span>
           <button className="font-medium underline-offset-2 hover:underline disabled:opacity-50" onClick={onCritique} disabled={!canCritique}>
@@ -130,12 +130,12 @@ function Report({ critique, stale, writing, canCritique, onCritique, onFlash, on
       )}
       <div>
         <Radar scores={critique.scores} />
-        <p className="mt-2 font-serif text-[14px] leading-7 text-ink-2">{critique.verdict}</p>
-        <div className="mt-1 text-[11px] text-ink-3">
+        <p className="mt-2 font-serif text-fs-base leading-7 text-ink-2">{critique.verdict}</p>
+        <div className="mt-1 text-fs-2xs text-ink-3">
           {relativeTime(critique.createdAt)} · AI 评分仅供参考
         </div>
         {!!critique.dropped && (
-          <p className="mt-2 flex items-start gap-1.5 rounded-lg bg-jade/10 px-2.5 py-1.5 text-[11.5px] leading-relaxed text-jade" role="note">
+          <p className="mt-2 flex items-start gap-1.5 rounded-lg bg-jade/10 px-2.5 py-1.5 text-fs-xs leading-relaxed text-jade" role="note">
             <ShieldCheck className="mt-0.5 size-3.5 shrink-0" />
             已自动过滤 {critique.dropped} 条意见：它们引用的原文在正文里找不到，疑似模型编造。
           </p>
@@ -159,10 +159,10 @@ function Report({ critique, stale, writing, canCritique, onCritique, onFlash, on
                     <meta.icon className="size-3" strokeWidth={3} />
                   </span>
                   <div className="min-w-0 flex-1">
-                    <div className="text-[13px] leading-snug">{b.beat}</div>
-                    {b.note && <div className="mt-1 text-[11.5px] leading-relaxed text-gold">{b.note}</div>}
+                    <div className="text-fs-sm leading-snug">{b.beat}</div>
+                    {b.note && <div className="mt-1 text-fs-xs leading-relaxed text-gold">{b.note}</div>}
                     {b.evidence && (
-                      <button onClick={() => onFlash(b.evidence)} className="mt-1 text-left text-[11.5px] leading-relaxed text-ink-3 transition hover:text-seal">
+                      <button onClick={() => onFlash(b.evidence)} className="mt-1 text-left text-fs-xs leading-relaxed text-ink-3 transition hover:text-seal">
                         {b.status === 'done' ? `「${b.evidence.replace(/^[“"「]|[”"」]$/g, '')}」` : b.evidence}
                       </button>
                     )}
@@ -191,27 +191,27 @@ function Report({ critique, stale, writing, canCritique, onCritique, onFlash, on
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-1.5">
                       <Badge tone={SEV[is.severity].tone}>{SEV[is.severity].label}</Badge>
-                      <span className="text-[11.5px] text-ink-3">{is.type}</span>
+                      <span className="text-fs-xs text-ink-3">{is.type}</span>
                       {is.verified && is.verified !== 'global' && (
-                        <span className="ml-auto flex items-center gap-1 text-[10.5px] text-jade" title={is.verified === 'exact' ? '引文已在正文中精确找到' : '引文与正文有细微出入，已按最接近的原文定位'}>
+                        <span className="ml-auto flex items-center gap-1 text-fs-2xs text-jade" title={is.verified === 'exact' ? '引文已在正文中精确找到' : '引文与正文有细微出入，已按最接近的原文定位'}>
                           <ShieldCheck className="size-3" />
                           {is.verified === 'exact' ? '已核对原文' : '近似核对'}
                         </span>
                       )}
                     </div>
                     {is.quote && (
-                      <button onClick={() => onFlash(is.quote)} className="mt-1.5 block w-full rounded-lg border-l-2 border-seal/50 bg-ink/[.03] px-2.5 py-1.5 text-left font-serif text-[12.5px] leading-relaxed text-ink-2 transition hover:bg-seal/[.06]" title="在正文中定位">
+                      <button onClick={() => onFlash(is.quote)} className="mt-1.5 block w-full rounded-lg border-l-2 border-seal/50 bg-ink/[.03] px-2.5 py-1.5 text-left font-serif text-fs-xs leading-relaxed text-ink-2 transition hover:bg-seal/[.06]" title="在正文中定位">
                         {is.quote}
                       </button>
                     )}
-                    <p className="mt-1.5 text-[12.5px] leading-relaxed text-ink">{is.problem}</p>
-                    {is.fact && <p className="mt-1 rounded-md bg-ink/[.04] px-2 py-1 text-[11.5px] leading-relaxed text-ink-3">对照的前文事实：{is.fact}</p>}
+                    <p className="mt-1.5 text-fs-xs leading-relaxed text-ink">{is.problem}</p>
+                    {is.fact && <p className="mt-1 rounded-md bg-ink/[.04] px-2 py-1 text-fs-xs leading-relaxed text-ink-3">对照的前文事实：{is.fact}</p>}
                     {is.fact && is.verified === 'global' && onAcknowledge && (
-                      <button onClick={() => onAcknowledge(is)} className="mt-1.5 text-[11.5px] text-ink-3 underline-offset-2 transition hover:text-seal hover:underline">
+                      <button onClick={() => onAcknowledge(is)} className="mt-1.5 text-fs-xs text-ink-3 underline-offset-2 transition hover:text-seal hover:underline">
                         这是有意为之（写入台账，后文按此为准）
                       </button>
                     )}
-                    <p className="mt-0.5 text-[12px] leading-relaxed text-ink-3">→ {is.suggestion}</p>
+                    <p className="mt-0.5 text-fs-xs leading-relaxed text-ink-3">→ {is.suggestion}</p>
                   </div>
                 </div>
               </motion.li>
@@ -225,7 +225,7 @@ function Report({ critique, stale, writing, canCritique, onCritique, onFlash, on
           <h4 className="mb-2 text-xs font-medium tracking-wide text-ink-2">值得保留</h4>
           <ul className="space-y-1">
             {critique.strengths.map((s) => (
-              <li key={s} className="flex gap-2 text-[12.5px] leading-relaxed text-ink-2">
+              <li key={s} className="flex gap-2 text-fs-xs leading-relaxed text-ink-2">
                 <span className="mt-2 size-1 shrink-0 rounded-full bg-jade" />
                 {s}
               </li>
@@ -236,12 +236,12 @@ function Report({ critique, stale, writing, canCritique, onCritique, onFlash, on
 
       <section className="sticky bottom-0 -mx-5 space-y-3 border-t border-line bg-paper-2/95 px-5 pt-4 pb-1 backdrop-blur">
         {pendingBeats.length > 0 && (
-          <label className="flex items-center justify-between gap-3 text-[12.5px] text-ink-2">
+          <label className="flex items-center justify-between gap-3 text-fs-xs text-ink-2">
             <span>同时补全 {pendingBeats.length} 个未完成 / 待核实的情节点</span>
             <Toggle checked={includeBeats} onChange={setIncludeBeats} label="补全情节点" />
           </label>
         )}
-        <Textarea value={instruction} onChange={(e) => setInstruction(e.target.value)} minRows={1} placeholder="额外的修改指示（选填）" className="text-[13px]" />
+        <Textarea value={instruction} onChange={(e) => setInstruction(e.target.value)} minRows={1} placeholder="额外的修改指示（选填）" className="text-fs-sm" />
         <div className="flex gap-2">
           <Button variant="ghost" size="sm" icon={<RefreshCw className="size-3.5" />} onClick={onCritique} disabled={!canCritique}>
             重审
