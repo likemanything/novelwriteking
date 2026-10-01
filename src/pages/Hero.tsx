@@ -2,7 +2,8 @@
 import { motion } from 'motion/react';
 import { ArrowRight, Dices, Eye, Layers, Stamp } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react';
-import { composeMany, fetchInspiration } from '@/ai/inspiration';
+import { composeMany, fetchInspiration, prefetchInspirations } from '@/ai/inspiration';
+import { useStageProfile } from '@/cloud/models';
 import { ThreadField } from '@/components/ThreadField';
 import { WritingScene } from '@/components/WritingScene';
 import { Button, Kbd } from '@/components/ui';
@@ -98,6 +99,11 @@ function SeedBox({ onEnergy, onSubmit }: { onEnergy: () => void; onSubmit: (seed
   const [rolling, setRolling] = useState(false);
   const ctrl = useRef<AbortController | null>(null);
   useEffect(() => () => ctrl.current?.abort(), []);
+  // 有模型时，提前在后台备好一批灵感，点「随机灵感」就能立刻出
+  const plan = useStageProfile('plan');
+  useEffect(() => {
+    if (plan.provider === 'cloud') void prefetchInspirations();
+  }, [plan.provider]);
 
   /** 随机灵感：有模型时由模型现写（边写边显示），没有时本地组合。 */
   const dice = async () => {
@@ -106,16 +112,9 @@ function SeedBox({ onEnergy, onSubmit }: { onEnergy: () => void; onSubmit: (seed
     ctrl.current = c;
     clearInterval(diceTimer.current);
     setRolling(true);
-    setSeed('');
     onEnergy();
     try {
-      const r = await fetchInspiration({
-        signal: c.signal,
-        onText: (t) => {
-          setSeed(t);
-          onEnergy();
-        },
-      });
+      const r = await fetchInspiration({ signal: c.signal });
       if (c.signal.aborted) return;
       if (r.fellBack) toast('模型暂时没有响应，这条灵感来自本地组合', { tone: 'info' });
       if (r.source === 'local') {
@@ -132,7 +131,21 @@ function SeedBox({ onEnergy, onSubmit }: { onEnergy: () => void; onSubmit: (seed
             }
           }, 24);
         });
-      } else setSeed(r.text);
+      } else {
+        // 模型写的灵感同样逐字落进输入框
+        let i = 0;
+        await new Promise<void>((resolve) => {
+          diceTimer.current = setInterval(() => {
+            i += 2;
+            setSeed(r.text.slice(0, i));
+            onEnergy();
+            if (i >= r.text.length) {
+              clearInterval(diceTimer.current);
+              resolve();
+            }
+          }, 24);
+        });
+      }
       ref.current?.focus();
     } catch {
       /* 被新的一次取代或已取消 */
