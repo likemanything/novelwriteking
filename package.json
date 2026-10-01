@@ -1,0 +1,54 @@
+{
+  "name": "inkloom",
+  "private": true,
+  "version": "2.0.0-alpha.1",
+  "description": "墨织 Inkloom — 面向工作室的 AI 长篇小说创作平台：多人协作写作，并把小说改编成短剧。",
+  "type": "module",
+  "engines": {
+    "node": ">=22.19"
+  },
+  "scripts": {
+    "setup": "node scripts/dev-setup.mjs",
+    "db:start": "node scripts/dev-db.mjs start",
+    "db:stop": "node scripts/dev-db.mjs stop",
+    "db:reset": "node scripts/dev-db.mjs reset",
+    "dev": "node scripts/dev.mjs",
+    "dev:web": "vite",
+    "dev:api": "tsx watch --clear-screen=false server/index.ts",
+    "migrate": "tsx server/cli.ts migrate",
+    "admin": "tsx server/cli.ts",
+    "test:api": "tsx --test tests/api.test.ts",
+    "build": "tsc -p . && vite build",
+    "typecheck": "tsc -p .",
+    "start": "tsx server/index.ts"
+  },
+  "dependencies": {
+    "@codemirror/commands": "6.11.1",
+    "@codemirror/state": "6.7.6",
+    "@codemirror/view": "6.43.13",
+    "@fontsource/noto-serif-sc": "5.3.0",
+    "@hono/node-server": "2.1.3",
+    "dexie": "4.4.6",
+    "dexie-react-hooks": "4.4.0",
+    "hono": "4.13.12",
+    "lucide-react": "1.49.0",
+    "motion": "13.4.6",
+    "postgres": "3.4.9",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "react-router": "7.18.4",
+    "tsx": "4.23.15",
+    "undici": "8.11.2",
+    "zustand": "5.0.15"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "4.3.3",
+    "@types/node": "26.6.3",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@vitejs/plugin-react": "6.1.1",
+    "tailwindcss": "4.3.3",
+    "typescript": "5.9.3",
+    "vite": "8.3.1"
+  }
+}
