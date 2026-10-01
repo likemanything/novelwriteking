@@ -597,7 +597,8 @@ test('短剧画布：建图、流水线运行、过期判断、权限、导出�
     await author.json('POST', `/api/drama/${d.id}/run-media`, {}, 202);
     p = await waitIdle((x) => byType(x, 'portrait')[0].status === 'done' && byType(x, 'location')[0].status === 'done');
     const asset1 = byType(p, 'portrait')[0].output.assetId;
-    assert.match(mediaSeen.filter((m) => m.path === '/media/img/generations').at(-1)!.body.prompt, /林澈/, '提示词包含人物外貌');
+    assert.ok(mediaSeen.some((m) => m.path === '/media/img/generations' && /林澈/.test(m.body.prompt ?? '') && /灰色风衣/.test(m.body.prompt ?? '')), '人物定妆提示词包含人物外貌');
+    assert.ok(mediaSeen.some((m) => m.path === '/media/img/generations' && /北岸灯塔/.test(m.body.prompt ?? '') && /不出现人物/.test(m.body.prompt ?? '')), '场景图提示词是空镜');
     assert.equal((await author.req('GET', `/api/media/${asset1}`)).status, 200);
     // 改提示词 → 节点过期；重新生成后旧图被清理、新图可访问
     const pid = byType(p, 'portrait')[0].id;
