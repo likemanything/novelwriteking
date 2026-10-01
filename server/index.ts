@@ -8,6 +8,7 @@ import { createReadStream, existsSync, statSync } from 'node:fs';
 import { extname, join, normalize } from 'node:path';
 import { Readable } from 'node:stream';
 import { createApp } from './app.ts';
+import { recoverDrama } from './drama.ts';
 import { assertConfig, config } from './config.ts';
 import { assertSafeRole, migrate, sql } from './db/pool.ts';
 import { startRealtime } from './realtime.ts';
@@ -31,6 +32,7 @@ async function main() {
   await assertSafeRole();
   if (process.env.AUTO_MIGRATE !== 'false') await migrate();
   await startRealtime();
+  await recoverDrama();
 
   const app = createApp();
   const hasDist = existsSync(join(config.distDir, 'index.html'));

@@ -69,6 +69,33 @@ class Client {
   }
 }
 
+/** 短剧各步骤的模拟回复：根据系统提示词判断是哪一步，返回结构正确的 JSON。 */
+function dramaReply(system: string, user: string): string | null {
+  const j = (x: unknown) => JSON.stringify(x);
+  if (system.includes('拆解为改编短剧')) {
+    return '```json\n' + j({
+      logline: '邮差追查一封没有寄出的信', mainPlot: '林澈在雾港发现旧信背后的秘密',
+      subplots: [{ name: '灯塔', summary: '灯塔里的女人' }],
+      keyEvents: [{ title: '收到旧信', summary: '', chapters: [2], visual: 4 }],
+      characters: [{ name: '林澈', role: '主角', look: '二十七岁，灰色风衣', voice: '低沉克制', relations: '' }],
+      locations: [{ name: '北岸灯塔', look: '雾中的石塔' }], tone: '冷峻', notes: '',
+    }) + '\n```';
+  }
+  if (system.includes('写分集大纲')) {
+    const m = user.match(/第 (\d+) 到第 (\d+) 集/)!;
+    const eps = [];
+    for (let n = Number(m[1]); n <= Number(m[2]); n++) eps.push({ n: 99, title: `第${n}集`, hook: '开场', conflict: '冲突', twist: '反转', cliffhanger: '悬念', summary: '剧情', sourceChapters: [n % 2 ? 2 : 3], characters: ['林澈'] });
+    return j({ episodes: eps });
+  }
+  if (system.includes('场景化剧本')) {
+    return j({ episode: 1, title: '剧本', scenes: [{ n: 1, location: '北岸灯塔', time: '夜', summary: '到达', source: { chapter: 2, quote: '雾最浓的晚上' }, lines: [{ type: 'action', text: '林澈推门' }, { type: 'dialogue', speaker: '林澈', text: '你迟到了？', emotion: '平静' }] }] });
+  }
+  if (system.includes('分镜导演')) {
+    return j({ episode: 1, shots: [{ n: 1, scene: 1, size: '全景', move: '推', seconds: 5, visual: '雾中的灯塔', firstFrame: '灯塔远景' }, { n: 2, scene: 1, size: '特写', move: '固定', seconds: 4, visual: '林澈的脸', dialogue: { speaker: '林澈', text: '你迟到了？', emotion: '平静' }, firstFrame: '特写' }] });
+  }
+  return null;
+}
+
 // 模拟模型服务（OpenAI 兼容）
 let mock: Server;
 let mockUrl = '';
@@ -95,9 +122,9 @@ before(async () => {
       }
       if (req.method === 'POST' && req.url === '/v1/chat/completions') {
         const j = JSON.parse(body);
-        const text = j.messages.at(-1).content.includes('你好') ? '你好' : REPLY;
+        const text = dramaReply(j.messages[0].content, j.messages.at(-1).content) ?? (j.messages.at(-1).content.includes('你好') ? '你好' : REPLY);
         res.writeHead(200, { 'content-type': 'text/event-stream' });
-        for (const ch of text) res.write(`data: ${JSON.stringify({ choices: [{ delta: { content: ch } }] })}\n\n`);
+        for (const ch of text.match(/[\s\S]{1,40}/g) ?? []) res.write(`data: ${JSON.stringify({ choices: [{ delta: { content: ch } }] })}\n\n`);
         res.write(`data: ${JSON.stringify({ choices: [], usage: { prompt_tokens: 11, completion_tokens: 7 } })}\n\n`);
         res.end('data: [DONE]\n\n');
         return;
@@ -372,6 +399,109 @@ test('AI 网关：流式转发、记录用量、只读成员不能用、额度�
     const q = await author.json('POST', '/api/ai/chat', { stage: 'write', system: '', messages: [{ role: 'user', content: 'x' }], projectId: 'p_1' }, 429);
     assert.equal(q.error.code, 'quota_member');
     await admin.json('PATCH', `/api/orgs/${team}`, { memberMonthlyTokenLimit: null });
+  } finally {
+    config.allowPrivateModelHosts = false;
+  }
+});
+
+test('短剧画布：建图、流水线运行、过期判断、权限、导出与用量', async () => {
+  config.allowPrivateModelHosts = true;
+  try {
+    // 小说内容：两章有正文
+    const long = '雾最浓的晚上，林澈去北岸灯塔。'.repeat(20);
+    await admin.json('POST', '/api/sync/push', {
+      changes: [
+        { table: 'chapters', id: 'ch_d2', row: { id: 'ch_d2', projectId: 'p_1', index: 2, title: '雾夜', status: 'drafting', workingVersionId: 'v_d2', words: 300, updatedAt: 5 } },
+        { table: 'chapters', id: 'ch_d3', row: { id: 'ch_d3', projectId: 'p_1', index: 3, title: '灯塔', status: 'drafting', workingVersionId: 'v_d3', words: 300, updatedAt: 5 } },
+        { table: 'versions', id: 'v_d2', row: { id: 'v_d2', projectId: 'p_1', chapterId: 'ch_d2', content: long, words: 300 } },
+        { table: 'versions', id: 'v_d3', row: { id: 'v_d3', projectId: 'p_1', chapterId: 'ch_d3', content: long, words: 300 } },
+      ],
+    });
+
+    await viewer.json('POST', '/api/drama/by-novel/p_1', {}, 403);
+    const made = await author.json('POST', '/api/drama/by-novel/p_1', { preset: { chapterFrom: 2, chapterTo: 3, episodes: 12 } });
+    const d = made.project;
+    assert.equal(d.preset.episodes, 12);
+    assert.deepEqual(d.nodes.map((n: any) => n.type).sort(), ['breakdown', 'outline', 'source']);
+    assert.equal(d.edges.length, 2);
+    // 重复创建返回同一张画布
+    assert.equal((await author.json('POST', '/api/drama/by-novel/p_1', {})).project.id, d.id);
+
+    const get = async (c: Client = author) => (await c.json('GET', `/api/drama/${d.id}`)).project;
+    const waitIdle = async (want: (p: any) => boolean) => {
+      for (let i = 0; i < 100; i++) {
+        const p = await get();
+        if (!p.nodes.some((n: any) => n.status === 'running') && want(p)) return p;
+        await new Promise((r) => setTimeout(r, 50));
+      }
+      throw new Error('等待画布运行超时');
+    };
+    const byType = (p: any, t: string) => p.nodes.filter((n: any) => n.type === t);
+
+    // 没有拆解就运行大纲：失败并给出原因
+    await author.json('POST', `/api/drama/nodes/${byType(d, 'outline')[0].id}/run`, {}, 202);
+    let p = await waitIdle((x) => byType(x, 'outline')[0].status === 'failed');
+    assert.match(byType(p, 'outline')[0].error, /故事拆解/);
+
+    // 没有接入模型时的提示（环节未分配）→ 先确认分配存在，这里直接一键运行
+    await viewer.json('POST', `/api/drama/${d.id}/run-all`, {}, 403);
+    await author.json('POST', `/api/drama/${d.id}/run-all`, {}, 202);
+    p = await waitIdle((x) => byType(x, 'storyboard').length === 12 && byType(x, 'storyboard').every((n: any) => n.status === 'done'));
+    assert.equal(byType(p, 'script').length, 12);
+    assert.ok(p.nodes.every((n: any) => !n.stale), '全部跑完后不应有过期节点');
+    // 批次拼接：序号连续，且以服务端为准
+    assert.deepEqual(byType(p, 'outline')[0].output.episodes.map((e: any) => e.n), Array.from({ length: 12 }, (_, i) => i + 1));
+    const scriptOf = (x: any, n: number) => byType(x, 'script').find((s: any) => s.params.episode === n);
+    const boardOf = (x: any, n: number) => byType(x, 'storyboard').find((s: any) => s.params.episode === n);
+    assert.equal(scriptOf(p, 1).output.scenes[0].source.chapter, 2);
+    assert.equal(boardOf(p, 1).output.totalSeconds, 9);
+
+    // 手改第 3 集剧本：只有它的分镜过期
+    const s3 = scriptOf(p, 3);
+    const edited = { ...s3.output, title: '改过的标题' };
+    await author.json('PATCH', `/api/drama/nodes/${s3.id}`, { output: edited });
+    p = await get();
+    assert.equal(scriptOf(p, 3).stale, false);
+    assert.equal(boardOf(p, 3).stale, true);
+    assert.equal(boardOf(p, 4).stale, false);
+
+    // 手改拆解：大纲与所有剧本都过期，拆解自己不过期
+    const bd = byType(p, 'breakdown')[0];
+    await author.json('PATCH', `/api/drama/nodes/${bd.id}`, { output: { ...bd.output, logline: '改过的一句话' } });
+    p = await get();
+    assert.equal(byType(p, 'breakdown')[0].stale, false);
+    assert.equal(byType(p, 'outline')[0].stale, true);
+    assert.ok(byType(p, 'script').every((n: any) => n.stale));
+
+    // 调整预设：集数减少 → 大纲重跑 → 多余的集被删除
+    await author.json('PATCH', `/api/drama/${d.id}`, { preset: { episodes: 3 } });
+    await author.json('POST', `/api/drama/nodes/${byType(p, 'outline')[0].id}/run`, {}, 202);
+    p = await waitIdle((x) => byType(x, 'script').length === 3);
+    assert.equal(byType(p, 'storyboard').length, 3);
+    assert.equal(p.edges.length, 2 + 3 * 2);
+
+    // 权限与隔离
+    assert.equal((await get(viewer)).id, d.id);
+    await viewer.json('POST', `/api/drama/nodes/${byType(p, 'outline')[0].id}/run`, {}, 403);
+    await viewer.json('PATCH', `/api/drama/nodes/${bd.id}`, { approved: true }, 403);
+    await outsider.json('GET', `/api/drama/${d.id}`, undefined, 404);
+    await guest.json('GET', `/api/drama/${d.id}`, undefined, 403);
+
+    // 导出
+    const md = await author.json('GET', `/api/drama/${d.id}/export?format=md`);
+    assert.match(md.content, /第 3 集/);
+    assert.match(md.content, /原著第 2 章/);
+    const csv = await author.json('GET', `/api/drama/${d.id}/export?format=csv`);
+    assert.match(csv.content, /^﻿集,镜头/);
+
+    // 用量按「短剧」环节记录
+    const usage = await admin.json('GET', '/api/ai/usage');
+    assert.ok(usage.rows.some((r: any) => r.stage === 'drama'));
+
+    // 删除画布
+    await author.json('DELETE', `/api/drama/${d.id}`, undefined, 403);
+    await admin.json('DELETE', `/api/drama/${d.id}`);
+    await admin.json('GET', `/api/drama/${d.id}`, undefined, 404);
   } finally {
     config.allowPrivateModelHosts = false;
   }

@@ -11,7 +11,8 @@ export type OrgEvent =
   | { type: 'sync'; seq: number; by?: string }
   | { type: 'lock'; chapterId: string }
   | { type: 'members' }
-  | { type: 'models' };
+  | { type: 'models' }
+  | { type: 'drama'; dramaId: string };
 
 interface Subscriber {
   orgId: string;

@@ -389,3 +389,47 @@ aiRoutes.get('/usage', async (c) => {
   };
   return c.json(out);
 });
+
+// ─────────────────────────── 服务端任务调用 ───────────────────────────
+
+/**
+ * 供服务端任务（例如短剧画布的文本节点）调用模型：解析环节分工 → 检查额度 → 调用 → 记录用量。
+ * 与 /chat 走同一套密钥、额度与用量规则，只是不经过浏览器。
+ */
+export async function runTextModel(
+  org: OrgContext,
+  o: { stage: Stage; usageStage: string; projectId?: string; system: string; user: string; maxTokens?: number; temperature?: number; signal?: AbortSignal },
+): Promise<string> {
+  const cred = await withTenant(org.orgId, async (tx) => {
+    const [a] = await tx<{ credential_id: string | null }[]>`select credential_id from stage_assignments where stage = ${o.stage}`;
+    if (!a?.credential_id) throw new HttpError(400, 'no_model', '还没有接入模型：请管理员在「设置 → 接入模型」里接入后再运行');
+    await checkQuota(tx, org);
+    return getCred(tx, a.credential_id);
+  });
+  const started = Date.now();
+  let status: 'ok' | 'error' | 'aborted' = 'ok';
+  let errorText: string | null = null;
+  let usage = { inputTokens: estimateTokens(o.system + o.user), outputTokens: 0, estimated: true };
+  try {
+    const r = await callProvider({
+      profile: profileOf(cred),
+      system: o.system,
+      messages: [{ role: 'user', content: o.user }],
+      fetch: safeFetch,
+      signal: o.signal,
+      temperature: o.temperature,
+      maxTokens: o.maxTokens,
+    });
+    usage = r.usage;
+    return r.text;
+  } catch (error) {
+    status = o.signal?.aborted ? 'aborted' : 'error';
+    errorText = error instanceof Error ? error.message : String(error);
+    throw error;
+  } finally {
+    await withTenant(org.orgId, (tx) => tx`
+      insert into usage_events (org_id, user_id, project_id, stage, credential_id, model, input_tokens, output_tokens, estimated, status, error, duration_ms)
+      values (${org.orgId}, ${org.user.id}, ${o.projectId ?? null}, ${o.usageStage}, ${cred.id}, ${cred.model}, ${usage.inputTokens}, ${usage.outputTokens},
+        ${usage.estimated}, ${status}, ${errorText?.slice(0, 300) ?? null}, ${Date.now() - started})`).catch((e) => console.error('[用量] 记录失败', e));
+  }
+}

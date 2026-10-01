@@ -26,7 +26,7 @@ interface SyncState {
 
 export const useSync = create<SyncState>()(() => ({ status: 'idle', pending: 0, lastSyncedAt: null, error: null }));
 
-type ServerEvent = 'sync' | 'lock' | 'members' | 'models';
+type ServerEvent = 'sync' | 'lock' | 'members' | 'models' | 'drama';
 type Row = Record<string, unknown>;
 
 const SEP = '\u0001';
@@ -275,7 +275,7 @@ function connectEvents() {
     if (data.seq > cursor) schedulePull(150);
     emit('sync', data);
   });
-  for (const t of ['lock', 'members', 'models'] as const) {
+  for (const t of ['lock', 'members', 'models', 'drama'] as const) {
     es.addEventListener(t, (e) => emit(t, JSON.parse((e as MessageEvent).data)));
   }
 }
