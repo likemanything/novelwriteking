@@ -4,6 +4,8 @@
 
 墨织是一款面向个人与团队的 AI 长篇小说创作工具。先定人物、世界观和大纲，再一章一章写、审、改；AI 负责起草，每一处改动都由作者决定。
 
+> **参与开发？**（人或 AI）先读 [CLAUDE.md](CLAUDE.md)——协作规则、目录地图、硬规则与已知陷阱都在那里；文档索引见 [docs/README.md](docs/README.md)。
+
 ```bash
 brew install postgresql@16   # 需要本机有 Postgres（仅开发环境用）
 npm install
