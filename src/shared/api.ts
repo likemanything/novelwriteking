@@ -154,7 +154,7 @@ export interface SignupCodeInfo {
 /** AI 网关的流式事件（NDJSON，每行一个） */
 export type GatewayEvent =
   | { t: 'd'; v: string }
-  | { t: 'end'; inputTokens: number; outputTokens: number }
+  | { t: 'end'; inputTokens: number; outputTokens: number; truncated?: boolean }
   | { t: 'err'; message: string; status?: number };
 
 /** 服务端协议识别的流式事件 */

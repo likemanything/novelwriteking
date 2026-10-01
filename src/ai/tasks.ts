@@ -19,29 +19,80 @@ import { profileFor } from '@/cloud/models';
 import { holdLock, LockedError } from '@/cloud/locks';
 import { ApiError } from '@/cloud/api';
 import { AIError, streamChat, type ChatMessage } from './client';
+import { BUDGET_MSG } from './providers';
 import * as D from './demo';
+import { lintProse } from './lint';
 import { blueprintText, buildLens, characterCard, planLens, renderLens } from './lens';
 import * as P from './prompts';
 import type { CritiqueResult, ExtractionResult, GenesisResult, MuseAction, OutlineChapter, StyleAnalysis } from './types';
 
-function call(stage: Stage, projectId: string | undefined, prompt: { system: string; user: string }, demo: () => string, ctx: JobContext, extra: { maxTokens?: number; temperature?: number; messages?: ChatMessage[] } = {}) {
-  return streamChat({
-    profile: profileFor(stage),
-    stage,
-    projectId,
-    system: prompt.system,
-    messages: extra.messages ?? [{ role: 'user', content: prompt.user }],
-    demo,
-    signal: ctx.signal,
-    onToken: ctx.onToken,
-    maxTokens: extra.maxTokens,
-    temperature: extra.temperature,
-  });
+interface CallExtra {
+  maxTokens?: number;
+  temperature?: number;
+  messages?: ChatMessage[];
+  /** 结构化输出：被截断时用两倍额度重试一次 */
+  json?: boolean;
+  /** 正文：被截断时自动让模型接着写完 */
+  continueIfCut?: boolean;
 }
 
-function parse<T>(raw: string): T {
+/**
+ * 调用模型。带「思考」的模型会把一部分输出额度花在思考上，所以额度要给足；
+ * 即使如此被截断了：结构化输出会加倍额度重试，正文会自动续写完——而不是留下写到一半的章节或残缺的 JSON。
+ */
+async function call(stage: Stage, projectId: string | undefined, prompt: { system: string; user: string }, demo: () => string, ctx: JobContext, extra: CallExtra = {}) {
+  const base: ChatMessage[] = extra.messages ?? [{ role: 'user', content: prompt.user }];
+  let cut = false;
+  const run = (messages: ChatMessage[], maxTokens: number | undefined, onToken: JobContext['onToken']) => {
+    cut = false;
+    return streamChat({
+      profile: profileFor(stage),
+      stage,
+      projectId,
+      system: prompt.system,
+      messages,
+      demo,
+      signal: ctx.signal,
+      onToken,
+      onEnd: (i) => (cut = i.truncated),
+      maxTokens,
+      temperature: extra.temperature,
+    });
+  };
+  let budget = extra.maxTokens;
+  let text: string;
   try {
-    return extractJson<T>(raw);
+    text = await run(base, budget, ctx.onToken);
+  } catch (error) {
+    // 带「思考」的模型有时把整个额度都花在思考上：加倍额度重试一次
+    if (!(error instanceof AIError) || !error.message.includes(BUDGET_MSG.slice(0, 12)) || !budget) throw error;
+    budget = Math.min(40000, budget * 2);
+    text = await run(base, budget, ctx.onToken);
+  }
+  if (cut && extra.json) {
+    text = await run(base, Math.min(40000, (budget ?? 4096) * 2), ctx.onToken);
+  } else if (cut && extra.continueIfCut) {
+    for (let i = 0; i < 2 && cut; i++) {
+      const so_far = text;
+      const more = await run(
+        [...base, { role: 'assistant', content: so_far }, { role: 'user', content: '你的上一段输出因为长度上限被截断了。请从停下的地方自然接着写完本章（包括章末悬念），不要重复已经写过的内容，不要任何说明。' }],
+        budget,
+        (chunk, full) => ctx.onToken(chunk, so_far + full),
+      );
+      text = so_far + more;
+    }
+  }
+  return text;
+}
+
+function lintSummaryText(text: string): string {
+  const r = lintProse(text);
+  return [`比喻 ${r.simileCount} 处（每千字 ${r.similePerK.toFixed(1)}），${r.paraEndSimile.count}/${r.paraEndSimile.total} 个段落以比喻收尾`, r.stock.length ? `套话：${r.stock.slice(0, 5).map((s) => `${s.name}×${s.count}`).join('、')}` : '套话：无明显堆积'].join('；');
+}
+
+function parse<T>(raw: string, salvage = false): T {
+  try {
+    return extractJson<T>(raw, { salvage });
   } catch {
     throw new AIError('模型的输出无法解析为结构化结果。可以重试一次，或换一个更擅长遵循格式的模型。');
   }
@@ -89,7 +140,7 @@ export function genesis(input: GenesisInput): Promise<GenesisResult> {
     label: '开书 · 搭建故事架构',
     stage: 'plan',
     run: async (ctx) => {
-      const raw = await call('plan', undefined, P.genesisPrompt(input), () => D.demoGenesis(input), ctx, { maxTokens: 4096 });
+      const raw = await call('plan', undefined, P.genesisPrompt(input), () => D.demoGenesis(input), ctx, { maxTokens: 12000, json: true });
       const g = parse<Partial<GenesisResult>>(raw);
       return {
         titles: arr<string>(g.titles).map((t) => str(t).replace(/[《》]/g, '')).filter(Boolean).slice(0, 3),
@@ -175,11 +226,11 @@ export function generateOutline(o: { projectId: string; from: number; count: num
             }
           },
         },
-        { maxTokens: 8192 },
+        { maxTokens: 16000, json: true },
       );
       let chapters = parsePartialArray<OutlineChapter>(raw);
       if (!chapters.length) {
-        const parsed = parse<OutlineChapter[] | { chapters: OutlineChapter[] }>(raw);
+        const parsed = parse<OutlineChapter[] | { chapters: OutlineChapter[] }>(raw, true);
         chapters = Array.isArray(parsed) ? parsed : arr<OutlineChapter>(parsed.chapters);
       }
       chapters = chapters.slice(0, o.count).map((c) => ({
@@ -251,7 +302,7 @@ export function draftChapter(projectId: string, chapterId: string, excluded: Set
               keep(full);
               c.onToken(chunk, full);
             },
-          }, { maxTokens: Math.max(4096, Math.round(project.targetWords * 2.2)) }),
+          }, { maxTokens: Math.max(8000, Math.round(project.targetWords * 3.2)), continueIfCut: true }),
         ctx,
       );
     },
@@ -280,7 +331,7 @@ export function reviseChapter(o: { projectId: string; chapterId: string; critiqu
               keep(full);
               c.onToken(chunk, full);
             },
-          }, { maxTokens: Math.max(4096, Math.round(project.targetWords * 2.4)) }),
+          }, { maxTokens: Math.max(8000, Math.round(project.targetWords * 3.4)), continueIfCut: true }),
         ctx,
       );
     },
@@ -306,8 +357,8 @@ export function critiqueChapter(projectId: string, chapterId: string) {
         db.characters.where('projectId').equals(projectId).toArray(),
         db.threads.where('projectId').equals(projectId).toArray(),
       ]);
-      const raw = await call('review', projectId, P.critiquePrompt(project, chapter, blueprintText(chapter, characters, threads), text), () => D.demoCritique({ text, chapter }), ctx, { temperature: 0.3, maxTokens: 4096 });
-      const r = parse<Partial<CritiqueResult>>(raw);
+      const raw = await call('review', projectId, P.critiquePrompt(project, chapter, blueprintText(chapter, characters, threads), text, lintSummaryText(text)), () => D.demoCritique({ text, chapter }), ctx, { temperature: 0.3, maxTokens: 10000, json: true });
+      const r = parse<Partial<CritiqueResult>>(raw, true);
       const critique: Critique = {
         id: uid('cr_'),
         projectId,
@@ -362,9 +413,9 @@ export async function finalizeWithKeeper(projectId: string, chapterId: string): 
         P.extractPrompt(project, fresh, text, characters.map((c) => characterCard(c, true)).join('\n'), await threadsText(projectId)),
         () => D.demoExtract({ project, chapter: fresh, text, characters, threads }),
         ctx,
-        { temperature: 0.2, maxTokens: 3072 },
+        { temperature: 0.2, maxTokens: 8000, json: true },
       );
-      const r = parse<Partial<ExtractionResult>>(raw);
+      const r = parse<Partial<ExtractionResult>>(raw, true);
       // 旧的待定提案来自同一章的早先定稿，已经过时
       await db.proposals.where('projectId').equals(projectId).filter((p) => p.chapterId === chapterId && p.status === 'pending').delete();
       return proposeFromExtraction(projectId, fresh, {
@@ -396,7 +447,7 @@ export function muse(o: { projectId: string; chapterId: string; action: MuseActi
         P.musePrompt({ project, action: o.action, selection: o.selection, before: o.before, after: o.after, instruction: o.instruction, characters: involved.map((c) => characterCard(c, true)).join('\n') }),
         () => D.demoMuse({ action: o.action, selection: o.selection, project, instruction: o.instruction }),
         ctx,
-        { maxTokens: Math.max(1024, o.selection.length * 4) },
+        { maxTokens: Math.max(3000, o.selection.length * 6) },
       );
       return cleanProse(raw).replace(/^[“"]|[”"]$/g, (m) => (o.selection.startsWith(m) || o.selection.endsWith(m) ? m : ''));
     },
@@ -420,7 +471,7 @@ export function continueWriting(o: { projectId: string; chapterId: string; befor
         P.continuePrompt({ project, blueprint: blueprintText(chapter, characters, threads), before: o.before, after: o.after }),
         () => D.demoContinue({ project, before: o.before, pov: chapter.blueprint.pov }),
         ctx,
-        { maxTokens: 512 },
+        { maxTokens: 2500 },
       );
       return cleanProse(raw);
     },
@@ -440,7 +491,7 @@ export function interview(o: { project: Project; characterId: string; history: C
       const last = o.history[o.history.length - 1]?.content ?? '';
       return call('muse', o.project.id, { system: P.interviewSystem(o.project, c), user: last }, () => D.demoInterview({ character: c, question: last }), ctx, {
         messages: o.history,
-        maxTokens: 600,
+        maxTokens: 3000,
       });
     },
   });
@@ -452,7 +503,7 @@ export function analyzeStyle(projectId: string, sample: string) {
     label: '文风分析',
     stage: 'plan',
     run: async (ctx) => {
-      const raw = await call('plan', projectId, P.stylePrompt(sample), () => D.demoStyle(sample), ctx, { temperature: 0.2, maxTokens: 1024 });
+      const raw = await call('plan', projectId, P.stylePrompt(sample), () => D.demoStyle(sample), ctx, { temperature: 0.2, maxTokens: 4000, json: true });
       const r = parse<Partial<StyleAnalysis>>(raw);
       return { voice: str(r.voice), pov: str(r.pov), tense: str(r.tense), tone: str(r.tone), rules: arr<string>(r.rules).map((x) => str(x)) };
     },

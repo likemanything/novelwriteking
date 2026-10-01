@@ -24,7 +24,7 @@ import {
   Unlock,
   Wand2,
 } from 'lucide-react';
-import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
+import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { continueWriting, critiqueChapter, draftChapter, finalizeWithKeeper, reviseChapter } from '@/ai/tasks';
 import { BlueprintEditor } from '@/components/BlueprintEditor';
@@ -34,6 +34,7 @@ import { useChapters, useCharacters, useCurrentProject, useThreads } from '@/hoo
 import { db } from '@/lib/db';
 import { useCaps } from '@/cloud/session';
 import { useChapterLock } from '@/cloud/locks';
+import { lintInstruction, lintProse } from '@/ai/lint';
 import { createBlankChapter, createVersion, saveWorkingContent, unfinalizeChapter } from '@/lib/repo';
 import { STATUS_META, type Chapter, type ChapterStatus, type Character, type Project, type Thread, type Version } from '@/lib/types';
 import { chineseNumber, countWords, cx, isAbort } from '@/lib/util';
@@ -234,6 +235,10 @@ function Desk({ project, chapter, characters, threads, railOpen, onToggleRail, i
   const setFocus = useUI((s) => s.setFocus);
 
   const [text, setText] = useState('');
+  const [lintOpen, setLintOpen] = useState(false);
+  // 文字体检：只在不在生成、正文足够长时计算，避免打字时卡顿
+  const lintText = useDeferredValue(text);
+  const lint = useMemo(() => (streaming ? null : lintProse(lintText)), [lintText, streaming]);
   const [saveState, setSaveState] = useState<'saved' | 'saving' | 'dirty'>('saved');
   const [tab, setTab] = useState<InspectorTab>(chapter.status === 'review' ? 'critique' : chapter.status === 'planned' ? 'blueprint' : 'lens');
   const [excluded, setExcluded] = useState(() => loadExcluded(chapter.id));
@@ -620,6 +625,47 @@ function Desk({ project, chapter, characters, threads, railOpen, onToggleRail, i
             {streaming ? '生成中' : saveState === 'saved' ? '已保存到本地' : saveState === 'saving' ? '保存中…' : '未保存'}
           </span>
           <span className="hidden md:inline">写作模型 · {writeProfile.name}</span>
+          {lint && lint.chars >= 600 && (
+            <span className="relative">
+              <button
+                onClick={() => setLintOpen(!lintOpen)}
+                className={cx('flex items-center gap-1.5 rounded-md px-2 py-1 transition hover:bg-ink/[.05]', lint.level === 'high' && 'text-gold')}
+                aria-expanded={lintOpen}
+                title="文字体检：比喻密度与套话"
+              >
+                <span className={cx('size-1.5 rounded-full', lint.level === 'high' ? 'bg-gold' : 'bg-jade')} />
+                {lint.level === 'high' ? 'AI 腔偏高' : '文字体检'}
+              </button>
+              {lintOpen && (
+                <div className="surface absolute bottom-full left-0 z-30 mb-2 w-80 rounded-xl p-3 text-[12px] leading-relaxed text-ink-2 shadow-[var(--shadow-float)]" role="dialog" aria-label="文字体检">
+                  <div className="mb-1 font-medium text-ink">{lint.summary}</div>
+                  <ul className="space-y-0.5 text-ink-3">
+                    <li>比喻：每千字 {lint.similePerK.toFixed(1)} 处（共 {lint.simileCount}）</li>
+                    <li>以比喻收尾的段落：{lint.paraEndSimile.count} / {lint.paraEndSimile.total}</li>
+                    {lint.stock.slice(0, 5).map((x) => (
+                      <li key={x.name}>
+                        套话「{x.name}」× {x.count}
+                      </li>
+                    ))}
+                  </ul>
+                  {lint.level === 'high' && !readOnly && (
+                    <Button
+                      size="xs"
+                      variant="soft"
+                      className="mt-2"
+                      icon={<Wand2 className="size-3" />}
+                      onClick={() => {
+                        setLintOpen(false);
+                        void revise([], lintInstruction(lint), false);
+                      }}
+                    >
+                      让 AI 修掉这些问题
+                    </Button>
+                  )}
+                </div>
+              )}
+            </span>
+          )}
           <span className="ml-auto flex items-center gap-1">
             <button onClick={() => patchSettings({ typewriter: !typewriter })} className={cx('rounded-md px-2 py-1 transition hover:bg-ink/[.05]', typewriter && 'text-seal')} aria-pressed={typewriter}>
               打字机

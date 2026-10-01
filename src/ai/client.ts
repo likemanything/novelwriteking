@@ -22,12 +22,18 @@ export interface StreamOptions {
   demo: () => string;
   signal?: AbortSignal;
   onToken?: (chunk: string, full: string) => void;
+  /** 流结束时的附加信息：truncated 表示因输出上限被截断 */
+  onEnd?: (info: { truncated: boolean }) => void;
   temperature?: number;
   maxTokens?: number;
 }
 
 export async function streamChat(o: StreamOptions): Promise<string> {
-  if (o.profile.provider === 'demo') return playDemo(o);
+  if (o.profile.provider === 'demo') {
+    const t = await playDemo(o);
+    o.onEnd?.({ truncated: false });
+    return t;
+  }
   let res: Response;
   try {
     res = await apiFetch(
@@ -47,7 +53,10 @@ export async function streamChat(o: StreamOptions): Promise<string> {
       if (ev.t === 'd') {
         full += ev.v;
         o.onToken?.(ev.v, full);
-      } else if (ev.t === 'end') ended = true;
+      } else if (ev.t === 'end') {
+        ended = true;
+        o.onEnd?.({ truncated: !!ev.truncated });
+      }
       else if (ev.t === 'err') throw new AIError(ev.message, ev.status);
     });
   } catch (error) {

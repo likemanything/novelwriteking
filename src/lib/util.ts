@@ -60,7 +60,62 @@ export function chineseNumber(n: number): string {
 }
 
 /** 从模型输出中稳健地提取 JSON（兼容 ```json 代码块、前后缀废话、尾逗号）。 */
-export function extractJson<T = unknown>(raw: string): T {
+/**
+ * 修复模型常见的 JSON 毛病：字符串里没转义的英文双引号（例如对白）、字符串里的真实换行、尾逗号。
+ * 用状态机判断：字符串里遇到 " 时，如果它后面紧跟的不是 , : } ]（忽略空白），就当作正文里的引号并转义。
+ */
+export function repairJson(text: string): string {
+  let out = '';
+  let inStr = false;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (!inStr) {
+      if (ch === '"') inStr = true;
+      out += ch;
+      continue;
+    }
+    if (ch === '\\') {
+      out += ch + (text[i + 1] ?? '');
+      i++;
+    } else if (ch === '"') {
+      const rest = text.slice(i + 1).match(/^\s*(.)/);
+      const next = rest ? rest[1] : '';
+      if (next === '' || ',:}]'.includes(next)) {
+        inStr = false;
+        out += ch;
+      } else out += '\\"';
+    } else if (ch === '\n') out += '\\n';
+    else if (ch === '\r') out += '\\r';
+    else if (ch === '\t') out += '\\t';
+    else out += ch;
+  }
+  return out.replace(/,\s*([}\]])/g, '$1');
+}
+
+/** 把被截断的 JSON 尽量补全（关闭未结束的字符串与括号）。只在明确允许时使用，结果可能缺少末尾内容。 */
+export function closeJson(text: string): string {
+  const stack: string[] = [];
+  let inStr = false;
+  let esc = false;
+  for (const ch of text) {
+    if (inStr) {
+      if (esc) esc = false;
+      else if (ch === '\\') esc = true;
+      else if (ch === '"') inStr = false;
+      continue;
+    }
+    if (ch === '"') inStr = true;
+    else if (ch === '{') stack.push('}');
+    else if (ch === '[') stack.push(']');
+    else if (ch === '}' || ch === ']') stack.pop();
+  }
+  let out = text;
+  if (inStr) out += '"';
+  out = out.replace(/,\s*$/, '').replace(/,?\s*"[^"]*"\s*:\s*$/, '');
+  return out + stack.reverse().join('');
+}
+
+export function extractJson<T = unknown>(raw: string, opts: { salvage?: boolean } = {}): T {
   let text = raw.trim();
   const fence = text.match(/```(?:json)?\s*([\s\S]*?)```/i);
   if (fence) text = fence[1].trim();
@@ -69,13 +124,18 @@ export function extractJson<T = unknown>(raw: string): T {
   const open = text[0];
   const close = open === '[' ? ']' : '}';
   const end = text.lastIndexOf(close);
-  if (end >= 0) text = text.slice(0, end + 1);
-  try {
-    return JSON.parse(text) as T;
-  } catch {
-    const cleaned = text.replace(/,\s*([}\]])/g, '$1').replace(/[“”]/g, '"');
-    return JSON.parse(cleaned) as T;
+  const body = end >= 0 ? text.slice(0, end + 1) : text;
+  const attempts = [() => body, () => repairJson(body)];
+  if (opts.salvage) attempts.push(() => closeJson(repairJson(text)));
+  let lastError: unknown;
+  for (const make of attempts) {
+    try {
+      return JSON.parse(make()) as T;
+    } catch (e) {
+      lastError = e;
+    }
   }
+  throw lastError;
 }
 
 /**

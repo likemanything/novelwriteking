@@ -20,7 +20,9 @@
     "test:api": "tsx --test tests/api.test.ts",
     "build": "tsc -p . && vite build",
     "typecheck": "tsc -p .",
-    "start": "tsx server/index.ts"
+    "start": "tsx server/index.ts",
+    "test:ai": "tsx --test tests/ai.test.ts",
+    "test": "npm run test:ai && npm run test:api"
   },
   "dependencies": {
     "@codemirror/commands": "6.11.1",

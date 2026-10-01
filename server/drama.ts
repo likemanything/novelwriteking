@@ -430,7 +430,7 @@ async function reconcileAssets(tx: Tx, orgId: string, dramaId: string, b: Breakd
 
 // ─────────────────────────── 模型调用 ───────────────────────────
 
-async function generateJson(org: OrgContext, novelId: string, prompt: { system: string; user: string }, signal: AbortSignal, maxTokens = 8000): Promise<any> {
+async function generateJson(org: OrgContext, novelId: string, prompt: { system: string; user: string }, signal: AbortSignal, maxTokens = 16000): Promise<any> {
   const combined = AbortSignal.any([signal, AbortSignal.timeout(NODE_TIMEOUT_MS)]);
   let user = prompt.user;
   for (let attempt = 0; ; attempt++) {

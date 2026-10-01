@@ -330,7 +330,7 @@ aiRoutes.post('/chat', bodyLimit({ maxSize: 4 * 1024 * 1024, onError: () => { th
         },
       });
       usage = r.usage;
-      await send({ t: 'end', inputTokens: usage.inputTokens, outputTokens: usage.outputTokens });
+      await send({ t: 'end', inputTokens: usage.inputTokens, outputTokens: usage.outputTokens, ...(r.truncated ? { truncated: true } : {}) });
     } catch (error) {
       const inputTokens = estimateTokens(system + messages.map((m) => m.content).join(''));
       usage = { inputTokens, outputTokens: estimateTokens(partial), estimated: true };

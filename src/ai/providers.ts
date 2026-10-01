@@ -100,7 +100,38 @@ export interface ProviderCall {
 }
 
 /** 调用模型并流式读取结果，返回完整文本与用量。 */
-export async function callProvider(o: ProviderCall): Promise<{ text: string; usage: Usage }> {
+export interface ProviderResult {
+  text: string;
+  usage: Usage;
+  /** 因为达到输出上限而被截断（正文没写完、JSON 没闭合） */
+  truncated?: boolean;
+}
+
+/** 输出额度被「思考」耗尽、没写出任何内容时的错误信息（调用方据此加倍额度重试） */
+export const BUDGET_MSG = '模型把输出额度都用在了思考上，没有写出内容。请在设置里调大该模型的「最大输出 tokens」后重试。';
+
+/** 有些服务对 max_tokens 有更低的上限，会返回 400：从报错里读出上限，或减半后重试。 */
+function lowerLimit(message: string, current: number): number | null {
+  if (!/max_?(completion_)?tokens|maximum|valid range|context length/i.test(message)) return null;
+  const nums = [...message.matchAll(/\d{3,6}/g)].map((m) => Number(m[0])).filter((n) => n < current && n >= 512);
+  const next = nums.length ? Math.max(...nums) : Math.floor(current / 2);
+  return next >= 512 && next < current ? next : null;
+}
+
+export async function callProvider(o: ProviderCall): Promise<ProviderResult> {
+  let maxTokens = o.maxTokens ?? o.profile.maxTokens;
+  for (let attempt = 0; ; attempt++) {
+    try {
+      return await callProviderOnce({ ...o, maxTokens });
+    } catch (error) {
+      const next = error instanceof AIError && error.status === 400 && attempt < 3 ? lowerLimit(error.message, maxTokens) : null;
+      if (!next) throw error;
+      maxTokens = next;
+    }
+  }
+}
+
+async function callProviderOnce(o: ProviderCall): Promise<ProviderResult> {
   const p = o.profile;
   const temperature = o.temperature ?? p.temperature;
   const max_tokens = o.maxTokens ?? p.maxTokens;
@@ -127,19 +158,20 @@ export async function callProvider(o: ProviderCall): Promise<{ text: string; usa
   // 部分服务在不支持流式时直接返回 JSON
   if (!type.includes('event-stream') && type.includes('json')) {
     const data = (await res.json()) as any;
+    const truncated = data.choices?.[0]?.finish_reason === 'length' || data.stop_reason === 'max_tokens';
     const text: string = p.provider === 'anthropic' ? (data.content ?? []).map((b: { text?: string }) => b.text ?? '').join('') : (data.choices?.[0]?.message?.content ?? '');
     o.onToken?.(text, text);
     const u = data.usage;
     const usage = u
       ? { inputTokens: u.prompt_tokens ?? u.input_tokens ?? 0, outputTokens: u.completion_tokens ?? u.output_tokens ?? 0, estimated: false }
       : { inputTokens: estimateTokens(inputChars), outputTokens: estimateTokens(text), estimated: true };
-    if (!text.trim()) throw new AIError('模型返回了空内容');
-    return { text, usage };
+    if (!text.trim()) throw new AIError(truncated ? BUDGET_MSG : '模型返回了空内容');
+    return { text, usage, truncated };
   }
   return readSSE(res, o, inputChars);
 }
 
-async function readSSE(res: Response, o: ProviderCall, inputChars: string): Promise<{ text: string; usage: Usage }> {
+async function readSSE(res: Response, o: ProviderCall, inputChars: string): Promise<ProviderResult> {
   if (!res.body) throw new AIError('模型没有返回内容');
   const reader = res.body.getReader();
   const decoder = new TextDecoder();
@@ -147,6 +179,7 @@ async function readSSE(res: Response, o: ProviderCall, inputChars: string): Prom
   let full = '';
   let input: number | null = null;
   let output: number | null = null;
+  let truncated = false;
   const anthropic = o.profile.provider === 'anthropic';
 
   const handle = (line: string) => {
@@ -166,9 +199,11 @@ async function readSSE(res: Response, o: ProviderCall, inputChars: string): Prom
       if (json.type === 'content_block_delta') chunk = json.delta?.text ?? '';
       if (json.type === 'message_start' && json.message?.usage) input = json.message.usage.input_tokens ?? input;
       if (json.type === 'message_delta' && json.usage) output = json.usage.output_tokens ?? output;
+      if (json.type === 'message_delta' && json.delta?.stop_reason === 'max_tokens') truncated = true;
     } else {
       // 深度思考模型的 reasoning_content 不计入正文
       chunk = json.choices?.[0]?.delta?.content ?? '';
+      if (json.choices?.[0]?.finish_reason === 'length') truncated = true;
       if (json.usage) {
         input = json.usage.prompt_tokens ?? input;
         output = json.usage.completion_tokens ?? output;
@@ -189,12 +224,12 @@ async function readSSE(res: Response, o: ProviderCall, inputChars: string): Prom
     for (const line of lines) handle(line);
   }
   if (buffer) handle(buffer);
-  if (!full.trim()) throw new AIError('模型返回了空内容');
+  if (!full.trim()) throw new AIError(truncated ? BUDGET_MSG : '模型返回了空内容');
   const usage: Usage =
     input !== null || output !== null
       ? { inputTokens: input ?? estimateTokens(inputChars), outputTokens: output ?? estimateTokens(full), estimated: input === null || output === null }
       : { inputTokens: estimateTokens(inputChars), outputTokens: estimateTokens(full), estimated: true };
-  return { text: full, usage };
+  return { text: full, usage, truncated };
 }
 
 /** 连接测试：发一个极短的请求。 */
