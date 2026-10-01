@@ -81,6 +81,14 @@ export function setMe(me: MeResponse) {
   useSession.setState({ me });
 }
 
+let started = false;
+/** 启动一次会话（重复调用无效）。标志与会话状态放在同一个模块里，热更新时一起重置。 */
+export function ensureSession() {
+  if (started) return;
+  started = true;
+  void loadSession();
+}
+
 export async function loadSession(): Promise<void> {
   try {
     const me = await api<MeResponse>('GET', '/api/me', undefined, { org: null });

@@ -1,7 +1,7 @@
 import { MotionConfig } from 'motion/react';
 import { lazy, Suspense, useEffect, type ReactNode } from 'react';
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router';
-import { loadSession, useSession } from '@/cloud/session';
+import { ensureSession, useSession } from '@/cloud/session';
 import { CommandPalette } from '@/components/CommandPalette';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { JobDock } from '@/components/JobDock';
@@ -20,6 +20,7 @@ const Outline = lazy(() => import('@/pages/Outline'));
 const Studio = lazy(() => import('@/pages/Studio'));
 const Loom = lazy(() => import('@/pages/Loom'));
 const Inbox = lazy(() => import('@/pages/Inbox'));
+const Drama = lazy(() => import('@/pages/Drama'));
 const Settings = lazy(() => import('@/pages/Settings'));
 const Team = lazy(() => import('@/pages/Team'));
 const Login = lazy(() => import('@/pages/Login'));
@@ -46,18 +47,12 @@ window.addEventListener('unhandledrejection', (e) => {
   }
 });
 
-let booted = false;
-
 /** 登录闸门：启动会话（读取账号、打开本地数据库、首次同步），未登录则去登录页。 */
 function Gate({ children }: { children: ReactNode }) {
   const status = useSession((s) => s.status);
   const error = useSession((s) => s.error);
   const location = useLocation();
-  useEffect(() => {
-    if (booted) return;
-    booted = true;
-    void loadSession();
-  }, []);
+  useEffect(() => ensureSession(), []);
 
   if (status === 'anon') {
     const next = location.pathname + location.search;
@@ -119,6 +114,7 @@ export function App() {
                       <Route path="write/:chapterId" element={<Studio />} />
                       <Route path="storylines" element={<Loom />} />
                       <Route path="loom" element={<Navigate to="../storylines" replace />} />
+                      <Route path="drama" element={<Drama />} />
                       <Route path="updates" element={<Inbox />} />
                       <Route path="inbox" element={<Navigate to="../updates" replace />} />
                     </Route>

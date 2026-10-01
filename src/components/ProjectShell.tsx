@@ -2,7 +2,7 @@
  * 作品工作区外壳：左侧导航 + 页面过渡。写作台的专注模式会让侧栏像帘子一样收起。
  */
 import { motion } from 'motion/react';
-import { ArrowLeft, Command, Feather, Inbox, LayoutDashboard, ListTree, Settings, Users, Waypoints } from 'lucide-react';
+import { ArrowLeft, Clapperboard, Command, Feather, Inbox, LayoutDashboard, ListTree, Settings, Users, Waypoints } from 'lucide-react';
 import { NavLink, Navigate, Outlet, useLocation, useParams } from 'react-router';
 import { ProjectContext, useChapters, usePendingProposals, useProject } from '@/hooks/data';
 import { cx } from '@/lib/util';
@@ -19,6 +19,7 @@ const NAV = [
   { to: 'outline', label: '大纲', icon: ListTree },
   { to: 'write', label: '写作台', icon: Feather },
   { to: 'storylines', label: '故事线', icon: Waypoints },
+  { to: 'drama', label: '短剧', icon: Clapperboard },
   { to: 'updates', label: '设定更新', icon: Inbox },
 ];
 
