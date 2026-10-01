@@ -96,6 +96,35 @@ function dramaReply(system: string, user: string): string | null {
   return null;
 }
 
+// 1x1 PNG 与最小 MP4 头
+const PNG = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64');
+const MP4 = Buffer.concat([Buffer.from([0, 0, 0, 24]), Buffer.from('ftypisom'), Buffer.alloc(32, 1)]);
+const mediaSeen: { path: string; auth: string; body: any }[] = [];
+let videoPolls = 0;
+function mediaMock(req: import('node:http').IncomingMessage, res: import('node:http').ServerResponse, body: string) {
+  const json = body ? JSON.parse(body) : {};
+  mediaSeen.push({ path: req.url!, auth: String(req.headers.authorization ?? req.headers['x-api-key'] ?? ''), body: json });
+  const send = (code: number, obj: unknown) => (res.writeHead(code, { 'content-type': 'application/json' }), res.end(JSON.stringify(obj)));
+  if (req.url === '/media/img/generations') {
+    if (req.headers.authorization !== 'Bearer img-key') return send(401, { error: { message: 'bad key' } });
+    return send(200, { data: [{ b64_json: PNG.toString('base64') }] });
+  }
+  if (req.url === '/media/video/submit') {
+    if (!/^Bearer [\w-]+\.[\w-]+\.[\w-]+$/.test(String(req.headers.authorization))) return send(401, { message: 'need jwt' });
+    videoPolls = 0;
+    return send(200, { data: { task_id: 'task-42' } });
+  }
+  if (req.url === '/media/video/tasks/task-42') {
+    videoPolls++;
+    return send(200, { data: videoPolls < 2 ? { status: 'processing' } : { status: 'succeeded', video_url: `http://127.0.0.1:${(mock.address() as { port: number }).port}/media/files/v.mp4` } });
+  }
+  if (req.url === '/media/files/v.mp4') {
+    res.writeHead(200, { 'content-type': 'application/octet-stream' });
+    return res.end(MP4);
+  }
+  res.writeHead(404).end();
+}
+
 // 模拟模型服务（OpenAI 兼容）
 let mock: Server;
 let mockUrl = '';
@@ -111,6 +140,7 @@ before(async () => {
     let body = '';
     req.on('data', (c) => (body += c));
     req.on('end', () => {
+      if (req.url?.startsWith('/media/')) return mediaMock(req, res, body);
       const ok = req.headers.authorization === 'Bearer sk-good-test-key-1234';
       if (!ok) {
         res.writeHead(401, { 'content-type': 'application/json' });
@@ -399,6 +429,78 @@ test('AI 网关：流式转发、记录用量、只读成员不能用、额度�
     const q = await author.json('POST', '/api/ai/chat', { stage: 'write', system: '', messages: [{ role: 'user', content: 'x' }], projectId: 'p_1' }, 429);
     assert.equal(q.error.code, 'quota_member');
     await admin.json('PATCH', `/api/orgs/${team}`, { memberMonthlyTokenLimit: null });
+  } finally {
+    config.allowPrivateModelHosts = false;
+  }
+});
+
+test('通用媒体适配：模板、协商、同步图像与异步视频（JWT + 轮询）、本地存储与鉴权', async () => {
+  const { render, getPath, negotiate, jwtHs256, validateSpec } = await import('../server/media/engine.ts');
+  // 模板：整串变量保持类型，缺失字段被省略，嵌入变量做字符串替换
+  assert.deepEqual(render({ a: '{{duration}}', b: '{{missing}}', c: 'x-{{ratio}}-y', d: ['{{prompt}}'] }, { duration: 5, ratio: '9:16', prompt: 'p' }), { a: 5, c: 'x-9:16-y', d: ['p'] });
+  assert.equal(getPath({ data: [{ u: 'ok' }] }, 'data[0].u'), 'ok');
+  // 能力协商：时长取最近、画幅取最近、超长提示词截断、不支持尾帧时丢弃
+  const n = negotiate({ durations: [5, 10], ratios: ['16:9', '1:1'], maxPromptChars: 5, modes: ['i2v'] }, { prompt: '123456789', duration: 8, ratio: '9:16', firstFrame: 'a', lastFrame: 'b' });
+  assert.equal(n.duration, 10);
+  assert.equal(n.ratio, '1:1');
+  assert.equal(n.prompt, '12345');
+  assert.equal(n.lastFrame, undefined);
+  assert.equal(jwtHs256('ak', 'sk').split('.').length, 3);
+  assert.match(validateSpec({ kind: 'video', baseUrl: 'https://x.com', auth: { type: 'bearer' }, submit: { path: '/a', response: { taskId: 'id' } } })!, /poll/);
+
+  config.allowPrivateModelHosts = true;
+  try {
+    const imageSpec = { kind: 'image', baseUrl: `${mockUrl}/media`, auth: { type: 'bearer' }, model: 'm', submit: { path: '/img/generations', body: { model: '{{model}}', prompt: '{{prompt}}', size: '{{size}}' }, response: { resultB64: 'data[0].b64_json' } } };
+    const videoSpec = {
+      kind: 'video', baseUrl: `${mockUrl}/media`, auth: { type: 'jwt-hs256' }, model: 'v', capabilities: { durations: [5, 10], ratios: ['9:16'], modes: ['t2v'] },
+      submit: { path: '/video/submit', body: { prompt: '{{prompt}}', duration: '{{duration}}', ratio: '{{ratio}}' }, response: { taskId: 'data.task_id' } },
+      poll: { path: '/video/tasks/{{task_id}}', intervalSec: 0.05, statusPath: 'data.status', running: ['processing'], success: ['succeeded'], failed: ['failed'], resultUrl: 'data.video_url' },
+    };
+    // 权限与校验
+    await author.json('POST', '/api/providers', { name: '图', spec: imageSpec, apiKey: 'img-key' }, 403);
+    const bad = await admin.json('POST', '/api/providers', { name: 'x', spec: { ...videoSpec, poll: undefined }, apiKey: 'k' }, 400);
+    assert.match(bad.error.message, /poll/);
+
+    const img = await admin.json('POST', '/api/providers', { name: '测试图像', spec: imageSpec, apiKey: 'img-key' });
+    assert.equal(img.keyHint.includes('img-key'), false);
+    const list = await admin.json('GET', '/api/providers');
+    assert.equal(list.assigned.image, img.id, '第一个接入的服务自动启用');
+    assert.equal(JSON.stringify(list).includes('img-key'), false, '密钥不会返回给浏览器');
+
+    // 同步图像：生成 → 落盘 → 带鉴权的文件服务（含 Range）
+    const t1 = await admin.json('POST', `/api/providers/${img.id}/test`, {});
+    assert.equal(t1.asset.mime, 'image/png');
+    const file = await admin.req('GET', `/api/media/${t1.asset.id}`);
+    assert.equal(file.status, 200);
+    assert.deepEqual(Buffer.from(await file.arrayBuffer()), PNG);
+    const part = await admin.req('GET', `/api/media/${t1.asset.id}`, undefined, { range: 'bytes=0-3' });
+    assert.equal(part.status, 206);
+    assert.equal((await part.arrayBuffer()).byteLength, 4);
+    await outsider.json('GET', `/api/media/${t1.asset.id}`, undefined, 404);
+    await viewer.json('POST', `/api/providers/${img.id}/test`, {}, 403);
+
+    // 错误的 Key：给出可读的错误
+    await admin.json('PATCH', `/api/providers/${img.id}`, { apiKey: 'wrong' });
+    const fail = await admin.json('POST', `/api/providers/${img.id}/test`, {}, 502);
+    assert.match(fail.error.message, /401/);
+
+    // 异步视频：JWT 认证、能力协商（8 秒 → 10 秒）、轮询到完成、转存本地
+    const vid = await admin.json('POST', '/api/providers', { name: '测试视频', spec: videoSpec, apiKey: 'ak-123', secretKey: 'sk-456' });
+    const t2 = await admin.json('POST', `/api/providers/${vid.id}/test`, {});
+    assert.equal(t2.asset.mime, 'video/mp4');
+    const sent = mediaSeen.filter((m) => m.path === '/media/video/submit').at(-1)!;
+    assert.equal(sent.body.duration, 5);
+    assert.equal(sent.body.ratio, '9:16', '16:9 被协商为该服务支持的 9:16');
+    const vf = await admin.req('GET', `/api/media/${t2.asset.id}`);
+    assert.equal(vf.headers.get('content-type'), 'video/mp4');
+    assert.deepEqual(Buffer.from(await vf.arrayBuffer()), MP4);
+
+    // 分配用途与用量
+    await admin.json('PUT', '/api/providers/assign', { kind: 'video', providerId: img.id }, 400);
+    await admin.json('PUT', '/api/providers/assign', { kind: 'image', providerId: null });
+    assert.equal((await admin.json('GET', '/api/providers')).assigned.image, null);
+    const usage = await admin.json('GET', '/api/ai/usage');
+    assert.ok(usage.rows.some((r: any) => r.stage === 'media:image') && usage.rows.some((r: any) => r.stage === 'media:video'));
   } finally {
     config.allowPrivateModelHosts = false;
   }

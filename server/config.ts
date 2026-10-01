@@ -49,6 +49,8 @@ export const config = {
   // 部署在 Nginx 等反向代理后面时设为 true，才会信任 X-Forwarded-For 里的客户端 IP
   trustProxy: bool('TRUST_PROXY', false),
   distDir: resolve(ROOT, 'dist'),
+  // 生成的图片、视频、音频直接存放在服务器本地磁盘
+  storageDir: resolve(ROOT, str('STORAGE_DIR', 'data/media')),
 };
 
 export function assertConfig() {

@@ -4,6 +4,7 @@ import { secureHeaders } from 'hono/secure-headers';
 import { adminRoutes } from './admin.ts';
 import { aiRoutes } from './ai.ts';
 import { dramaRoutes } from './drama.ts';
+import { mediaRoutes, providerRoutes } from './media.ts';
 import { authRoutes, meRoutes, sessionMiddleware } from './auth.ts';
 import { config } from './config.ts';
 import { sql } from './db/pool.ts';
@@ -56,6 +57,8 @@ export function createApp() {
   app.route('/api/locks', lockRoutes);
   app.route('/api/ai', aiRoutes);
   app.route('/api/drama', dramaRoutes);
+  app.route('/api/providers', providerRoutes);
+  app.route('/api/media', mediaRoutes);
   app.route('/api/admin', adminRoutes);
 
   app.all('/api/*', (c) => c.json({ error: { code: 'not_found', message: '接口不存在' } }, 404));
