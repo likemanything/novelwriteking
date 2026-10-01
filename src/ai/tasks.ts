@@ -145,36 +145,49 @@ async function ensureDigest(project: Project, chapter: Chapter, names: string[],
   const cached = digestCache.get(`${chapter.id}:${hash}`);
   if (cached) return cached;
   if (profileFor('plan').provider === 'demo') return null;
-  try {
-    const raw = await streamChat({
-      profile: profileFor('plan'),
-      stage: 'plan',
-      projectId: project.id,
-      ...(() => {
-        const pr = P.digestPrompt(chapter, text, names, priorFacts);
-        return { system: pr.system, messages: [{ role: 'user' as const, content: pr.user }] };
-      })(),
-      demo: () => '{}',
-      signal,
-      temperature: 0.2,
-      maxTokens: 8000,
-    });
-    const j = parse<{ summary?: string; facts?: unknown[]; contradictions?: { fact?: unknown; prior?: unknown }[] }>(raw, true);
-    const conflicts = arr<{ fact?: unknown; prior?: unknown }>(j.contradictions)
-      .map((c) => ({ fact: str(c.fact), prior: str(c.prior) }))
-      .filter((c) => c.fact && c.prior)
-      .slice(0, 6);
-    const digest: ChapterDigest = { hash, summary: str(j.summary), facts: arr<unknown>(j.facts).map((f) => str(f)).filter(Boolean).slice(0, 16), ...(conflicts.length ? { conflicts } : {}), at: Date.now() };
-    if (!digest.summary && !digest.facts.length) return null;
-    digestCache.set(`${chapter.id}:${hash}`, digest);
-    // 已定稿的章节只有编辑能改；没有权限时只缓存在内存里，不去触发被服务端拒绝的写入
-    if (chapter.status !== 'final' || capsNow(project.id).finalize) await db.chapters.update(chapter.id, { digest });
-    chapter.digest = digest;
-    return digest;
-  } catch (error) {
-    if (isAbort(error)) throw error;
-    return null; // 台账是增强项：失败了不影响写作本身
+  const pr = P.digestPrompt(chapter, text, names, priorFacts);
+  // 台账是 JSON 输出，偶尔会因为引号等原因解析失败：重试一次；仍失败时留下日志，而不是悄悄丢掉
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const raw = await streamChat({
+        profile: profileFor('plan'),
+        stage: 'plan',
+        projectId: project.id,
+        system: pr.system,
+        messages: [{ role: 'user', content: pr.user }],
+        demo: () => '{}',
+        signal,
+        temperature: 0.2,
+        maxTokens: 8000 + attempt * 6000,
+      });
+      const j = parse<{ summary?: string; facts?: unknown[]; contradictions?: { fact?: unknown; prior?: unknown }[] }>(raw, true);
+      const conflicts = arr<{ fact?: unknown; prior?: unknown }>(j.contradictions)
+        .map((c) => ({ fact: str(c.fact), prior: str(c.prior) }))
+        .filter((c) => c.fact && c.prior)
+        .slice(0, 6);
+      const digest: ChapterDigest = { hash, summary: str(j.summary), facts: arr<unknown>(j.facts).map((f) => str(f)).filter(Boolean).slice(0, 16), ...(conflicts.length ? { conflicts } : {}), at: Date.now() };
+      if (!digest.summary && !digest.facts.length) continue;
+      digestCache.set(`${chapter.id}:${hash}`, digest);
+      // 已定稿的章节只有编辑能改；没有权限时只缓存在内存里，不去触发被服务端拒绝的写入
+      if (chapter.status !== 'final' || capsNow(project.id).finalize) await db.chapters.update(chapter.id, { digest });
+      chapter.digest = digest;
+      return digest;
+    } catch (error) {
+      if (isAbort(error)) throw error;
+      if (attempt === 1) console.warn(`[连续性台账] 第${chapter.index}章台账生成失败，本次跳过：`, error);
+    }
   }
+  return null; // 台账是增强项：失败了不影响写作本身
+}
+
+/** 作者确认某条「与前文矛盾」的内容是有意为之（例如伏笔）：写入台账，之后的章节会把它当作事实。 */
+export async function acknowledgeConflict(chapterId: string, problemText: string) {
+  const ch = await db.chapters.get(chapterId);
+  const d = ch?.digest;
+  const hit = d?.conflicts?.find((c) => problemText.includes(c.fact));
+  if (!ch || !d || !hit) return false;
+  await db.chapters.update(chapterId, { digest: { ...d, facts: [...d.facts, hit.fact], conflicts: d.conflicts!.filter((c) => c !== hit) } });
+  return true;
 }
 
 /** 为某章之前的最近几章补齐台账（按顺序，最多 6 章）。 */

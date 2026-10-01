@@ -26,7 +26,7 @@ import {
 } from 'lucide-react';
 import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useNavigate, useParams } from 'react-router';
-import { continueWriting, critiqueChapter, draftChapter, finalizeWithKeeper, reviseChapter } from '@/ai/tasks';
+import { acknowledgeConflict, continueWriting, critiqueChapter, draftChapter, finalizeWithKeeper, reviseChapter } from '@/ai/tasks';
 import { BlueprintEditor } from '@/components/BlueprintEditor';
 import { Seal, SealStamp } from '@/components/Seal';
 import { Button, Empty, IconButton, InkSpinner, Kbd, Menu, ProgressRing, Tabs } from '@/components/ui';
@@ -620,6 +620,15 @@ function Desk({ project, chapter, characters, threads, railOpen, onToggleRail, i
               <span className="text-ink">{words.toLocaleString('zh-CN')}</span> / {project.targetWords.toLocaleString('zh-CN')} 字
             </span>
           </span>
+          {!streaming && !readOnly && words > 0 && words < project.targetWords * 0.75 && (
+            <button
+              onClick={() => void revise([], `把本章扩写到约 ${project.targetWords} 字：保持情节、人物和结尾不变，把关键场景写透（动作、感官细节、对白的潜台词、人物的停顿与第一反应），不要追加新的情节或场景，不要用空泛的描写凑字数。`, false)}
+              className="rounded-md px-2 py-1 text-gold transition hover:bg-gold/10"
+              title="篇幅明显低于目标，可以让 AI 把关键场景写透"
+            >
+              篇幅偏短 · 一键扩写
+            </button>
+          )}
           <span className="flex items-center gap-1.5" aria-live="polite">
             <span className={cx('size-1.5 rounded-full', saveState === 'saved' ? 'bg-jade' : saveState === 'saving' ? 'animate-pulse bg-gold' : 'bg-ink-3')} />
             {streaming ? '生成中' : saveState === 'saved' ? '已保存到本地' : saveState === 'saving' ? '保存中…' : '未保存'}
@@ -733,6 +742,9 @@ function Desk({ project, chapter, characters, threads, railOpen, onToggleRail, i
                           if (!editor.current?.flash(q)) toast('没能在正文里找到这段引文', { detail: '可能已被修改。' });
                         }}
                         onRevise={revise}
+                        onAcknowledge={async (is) => {
+                          if (await acknowledgeConflict(chapter.id, is.problem)) toast('已写入连续性台账', { tone: 'success', detail: '后面的章节会把它当作既定事实。' });
+                        }}
                       />
                     )}
                     {tab === 'versions' && <VersionsPanel chapter={chapter} versions={versions} currentText={text} onRestore={restore} onSnapshot={snapshot} locked={readOnly || streaming} />}

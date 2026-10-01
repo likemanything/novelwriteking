@@ -73,9 +73,11 @@ interface Props {
   onCritique: () => void;
   onFlash: (quote: string) => void;
   onRevise: (issueIds: string[], instruction: string, includeBeats: boolean) => void;
+  /** 作者确认「与前文矛盾」是有意为之，写入连续性台账 */
+  onAcknowledge?: (issue: Critique['issues'][number]) => void;
 }
 
-export function CritiquePanel({ critique, stale, critiquing, writing, canCritique, onCritique, onFlash, onRevise }: Props) {
+export function CritiquePanel({ critique, stale, critiquing, writing, canCritique, onCritique, onFlash, onRevise, onAcknowledge }: Props) {
   if (critiquing) {
     return (
       <div className="flex flex-col items-center gap-4 px-6 py-20 text-center">
@@ -97,10 +99,10 @@ export function CritiquePanel({ critique, stale, critiquing, writing, canCritiqu
       </Empty>
     );
   }
-  return <Report key={critique.id} critique={critique} stale={stale} writing={writing} onCritique={onCritique} onFlash={onFlash} onRevise={onRevise} canCritique={canCritique} />;
+  return <Report key={critique.id} critique={critique} stale={stale} writing={writing} onCritique={onCritique} onFlash={onFlash} onRevise={onRevise} onAcknowledge={onAcknowledge} canCritique={canCritique} />;
 }
 
-function Report({ critique, stale, writing, canCritique, onCritique, onFlash, onRevise }: Omit<Props, 'critique' | 'critiquing'> & { critique: Critique }) {
+function Report({ critique, stale, writing, canCritique, onCritique, onFlash, onRevise, onAcknowledge }: Omit<Props, 'critique' | 'critiquing'> & { critique: Critique }) {
   const [picked, setPicked] = useState<Set<string>>(() => new Set(critique.issues.filter((i) => i.severity !== 'low').map((i) => i.id)));
   const [instruction, setInstruction] = useState('');
   const pendingBeats = useMemo(() => critique.beats.filter((b) => b.status !== 'done'), [critique.beats]);
@@ -204,6 +206,11 @@ function Report({ critique, stale, writing, canCritique, onCritique, onFlash, on
                     )}
                     <p className="mt-1.5 text-[12.5px] leading-relaxed text-ink">{is.problem}</p>
                     {is.fact && <p className="mt-1 rounded-md bg-ink/[.04] px-2 py-1 text-[11.5px] leading-relaxed text-ink-3">对照的前文事实：{is.fact}</p>}
+                    {is.fact && is.verified === 'global' && onAcknowledge && (
+                      <button onClick={() => onAcknowledge(is)} className="mt-1.5 text-[11.5px] text-ink-3 underline-offset-2 transition hover:text-seal hover:underline">
+                        这是有意为之（写入台账，后文按此为准）
+                      </button>
+                    )}
                     <p className="mt-0.5 text-[12px] leading-relaxed text-ink-3">→ {is.suggestion}</p>
                   </div>
                 </div>
